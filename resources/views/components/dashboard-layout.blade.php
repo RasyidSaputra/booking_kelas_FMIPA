@@ -1,4 +1,4 @@
-@props(['title' => 'Dashboard'])
+@props(['title' => 'Dashboard', 'showErrors' => true])
 <!DOCTYPE html>
 <html lang="id">
     <head>
@@ -28,7 +28,7 @@
                     <button type="submit">Cari <span aria-hidden="true">↗</span></button>
                 </form>
                 <details class="dash-account">
-                    <summary><span class="dash-avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span><span class="dash-account-name">{{ auth()->user()->name }}<small>@can('view-room-master') Administrator @else Peminjam @endcan</small></span><x-dashboard-icon name="chevron-down" /></summary>
+                    <summary><span class="dash-avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span><span class="dash-account-name">{{ auth()->user()->name }}<small>{{ auth()->user()->roleLabel() }}</small></span><x-dashboard-icon name="chevron-down" /></summary>
                     <div class="dash-account-menu">
                         <a href="{{ route('profile.edit') }}"><x-dashboard-icon name="user" /> Profil saya</a>
                         <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit"><x-dashboard-icon name="logout" /> Keluar</button></form>
@@ -55,13 +55,13 @@
 
                 <div class="dash-sidebar-bottom">
                     <div class="dash-sidebar-tip"><span class="dash-tip-icon"><x-dashboard-icon name="calendar" /></span><strong>Rencanakan lebih awal.</strong><p>Cek jadwal ruangan sebelum mengajukan kegiatan Anda.</p><a href="{{ route('dashboard') }}#calendar">Lihat kalender <span aria-hidden="true">↗</span></a></div>
-                    <a href="{{ route('profile.edit') }}" class="dash-nav-item"><x-dashboard-icon name="user" /><span>Pengaturan profil</span></a>
+                    <a href="{{ route('profile.edit') }}" @class(['dash-nav-item', 'is-active' => request()->routeIs('profile.*')]) @if(request()->routeIs('profile.*')) aria-current="page" @endif><x-dashboard-icon name="user" /><span>Pengaturan profil</span></a>
                     <p class="dash-sidebar-footer">Ruang untuk kegiatan bersama.<br>© {{ now()->year }} FMIPA UNRI</p>
                 </div>
             </aside>
 
             <main id="main-content" class="dash-content">
-                @if ($errors->any())
+                @if ($showErrors && $errors->any())
                     <div class="dash-error" role="alert"><strong>Periksa kembali filter Anda.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                 @endif
                 {{ $slot }}

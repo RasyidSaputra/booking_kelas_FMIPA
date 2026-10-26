@@ -16,8 +16,17 @@ class PasswordController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validateWithBag('updatePassword', [
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+        ], [
+            'required' => ':attribute wajib diisi.',
+            'string' => ':attribute harus berupa teks.',
+            'current_password.current_password' => 'Kata sandi saat ini tidak sesuai.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru belum cocok.',
+            'password.min' => 'Kata sandi baru minimal :min karakter.',
+        ], [
+            'current_password' => 'Kata sandi saat ini',
+            'password' => 'Kata sandi baru',
         ]);
 
         $request->user()->update([

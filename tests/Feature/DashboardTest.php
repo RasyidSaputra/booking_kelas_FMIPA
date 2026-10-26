@@ -104,7 +104,13 @@ class DashboardTest extends TestCase
 
     public function test_a_borrower_cannot_open_room_master_even_by_direct_url(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'peminjam']))
+        $this->actingAs(User::factory()->create(['role' => 'mahasiswa']))
+            ->get('/admin/rooms')->assertForbidden();
+    }
+
+    public function test_a_lecturer_cannot_open_room_master(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'dosen']))
             ->get('/admin/rooms')->assertForbidden();
     }
 

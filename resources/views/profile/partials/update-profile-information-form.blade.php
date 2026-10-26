@@ -1,64 +1,40 @@
-<section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
+<section id="profile-information" class="profile-card" aria-labelledby="profile-information-title">
+    <header class="profile-card-heading">
+        <span class="profile-section-icon"><x-dashboard-icon name="user" /></span>
+        <div><h2 id="profile-information-title">Informasi profil</h2><p>Perbarui nama, identitas, dan alamat email Anda.</p></div>
     </header>
 
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
+    @if(session('status') === 'profile-updated')
+        <div class="profile-success" role="status"><x-dashboard-icon name="check" /> Perubahan profil berhasil disimpan.</div>
+    @endif
+
+    @if($errors->getBag('default')->any())
+        <div class="profile-validation-summary" role="alert"><x-dashboard-icon name="info" /><div><strong>Profil belum tersimpan.</strong><ul>@foreach($errors->getBag('default')->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>
+    @endif
+
+    <form id="send-verification" method="POST" action="{{ route('verification.send') }}">@csrf</form>
+
+    <form method="POST" action="{{ route('profile.update') }}" class="profile-form" x-data="{ submitting: false }" x-on:submit="submitting = true">
         @csrf
-    </form>
+        @method('PATCH')
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
-        @csrf
-        @method('patch')
+        <x-profile-field name="name" label="Nama lengkap" :value="$user->name" placeholder="Nama sesuai identitas Anda" required autocomplete="name" maxlength="255" />
 
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+        <div class="profile-field-grid">
+            <x-profile-field name="identity_number" label="NIM / NIP" :value="$user->identity_number" placeholder="Masukkan NIM atau NIP" hint="Gunakan identitas mahasiswa atau pegawai Anda." required maxlength="30" autocapitalize="off" spellcheck="false" />
+            <x-profile-field name="email" label="Alamat email" type="email" :value="$user->email" placeholder="nama@contoh.ac.id" hint="Gunakan alamat email aktif dengan huruf kecil." required autocomplete="email" maxlength="255" />
         </div>
 
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+        @if($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+            <div class="profile-verification"><x-dashboard-icon name="info" /><div><p>Alamat email Anda belum diverifikasi.</p><button type="submit" form="send-verification" class="dash-text-link">Kirim ulang email verifikasi</button></div></div>
+        @endif
 
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
-
-                        <button form="send-verification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
-            @endif
+        <div class="profile-role-info">
+            <span class="profile-section-icon is-muted"><x-dashboard-icon name="shield" /></span>
+            <div><span class="profile-role-label">Role akun</span><strong>{{ $user->roleLabel() }}</strong><p>Role dikelola oleh pengelola sistem dan tidak dapat diubah melalui halaman profil.</p></div>
+            <span class="profile-readonly-label"><x-dashboard-icon name="lock" />Hanya informasi</span>
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
-            @endif
-        </div>
+        <div class="profile-form-footer"><span>Pastikan data Anda sudah benar sebelum menyimpan.</span><button class="dash-button is-primary" type="submit" x-bind:disabled="submitting"><span x-text="submitting ? 'Menyimpan…' : 'Simpan perubahan'">Simpan perubahan</span><x-dashboard-icon name="check" /></button></div>
     </form>
 </section>

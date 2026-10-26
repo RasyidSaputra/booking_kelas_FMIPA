@@ -1,9 +1,13 @@
 # Persiapan dan TODO Laravel — Peminjaman Ruangan FMIPA UNRI
 
-Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah contoh belum otomatis dianggap berhasil. Pengecualian yang sudah dijalankan sesuai permintaan Anda dicatat pada **Log eksekusi migration** di bawah; build dan feature test masih belum dijalankan oleh Codex.
+Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah contoh belum otomatis dianggap berhasil. Pekerjaan yang sudah dijalankan dicatat pada **Hasil uji alur A1**, **Perbaikan password admin**, **Penyesuaian role pengguna**, dan **Log eksekusi migration** di bawah. Feature test A1 sudah dijalankan; build dan pemeriksaan visual browser belum dijalankan oleh Codex.
 
 ## Navigasi
 
+- [Hasil uji alur A1](#hasil-uji-alur-a1)
+- [Perbaikan password admin](#perbaikan-password-admin)
+- [Penyesuaian role pengguna](#penyesuaian-role-pengguna)
+- [A1 — Profil pengguna](#a1--profil-pengguna)
 - [Log eksekusi migration](#log-eksekusi-migration)
 - [A1 — Dashboard utama dan akses admin](#a1--dashboard-utama-dan-akses-admin)
 - [A1 — Halaman login dan registrasi](#a1--halaman-login-dan-registrasi)
@@ -17,6 +21,167 @@ Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah con
 - [P4 — Pemeriksaan dan cara menjalankan](#p4--pemeriksaan-dan-cara-menjalankan)
 - [P5 — Urutan kerja dan bukti eksekusi](#p5--urutan-kerja-dan-bukti-eksekusi)
 - [Checklist penerapan materi](#checklist-penerapan-materi-laravel)
+
+## Hasil uji alur A1
+
+**26 Oktober 2026 — Codex. Hasil: 50 test lulus, 281 assertion, durasi 19,09 detik.** Versi yang diuji adalah perubahan lokal pada working tree saat pengujian, belum dibuat commit khusus hasil ini.
+
+Perintah yang benar-benar dijalankan:
+
+```powershell
+php artisan test --compact --filter='A1FlowTest|AuthenticationTest|RegistrationTest|DashboardTest|ProfileTest|PasswordUpdateTest|UserRoleMigrationTest'
+```
+
+Ringkasan output:
+
+```text
+Tests:    50 passed (281 assertions)
+Duration: 19.09s
+```
+
+Pengujian menggunakan **SQLite `:memory:`**. `phpunit.xml` memaksa environment `testing` dan koneksi database uji. `tests/TestCase.php` memeriksa konfigurasi sebelum migration test berjalan dan menghentikan pengujian jika koneksinya bukan SQLite dalam memori. Akun admin manual serta data pada MySQL `kelasku` tidak digunakan untuk fixture pengujian.
+
+| Kelompok test | Jumlah kasus | Hasil |
+| --- | --- | --- |
+| A1FlowTest | 7 | Lulus |
+| AuthenticationTest | 5 | Lulus |
+| RegistrationTest | 7 | Lulus |
+| DashboardTest | 12 | Lulus |
+| ProfileTest | 13 | Lulus |
+| PasswordUpdateTest | 5 | Lulus |
+| UserRoleMigrationTest | 1 | Lulus |
+| Total | 50 | Lulus, tanpa kegagalan |
+
+- [x] A1FLOW01 — Registrasi mahasiswa → logout dari login otomatis Breeze → login dengan NIM/NIP → dashboard → ubah nama/NIM/email → ubah kata sandi → logout. Login berikutnya harus memakai NIM dan kata sandi baru; kombinasi lama ditolak.
+- [x] A1FLOW02 — Mahasiswa dan dosen login melalui route sebenarnya, tidak melihat menu Master data kelas, dan mendapat 403 ketika membuka `/admin/rooms`. Admin dapat login, melihat menu, dan membuka halaman master.
+- [x] A1FLOW03 — Riwayat `/bookings` tetap hanya berisi milik pengguna login untuk mahasiswa, dosen, maupun admin; parameter `user_id` dan `role` palsu tidak mengalihkan kepemilikan. Diuji dengan 12 booking sendiri dan booking akun lain pada dua halaman pagination.
+
+Test integrasi baru ada di `tests/Feature/A1FlowTest.php`. Pengujian tambahan yang ikut lulus mencakup NIM/email unik, larangan perubahan role lewat profil, password salah/konfirmasi tidak cocok, hashing, perlindungan riwayat saat hapus akun, warna kalender, tahun kabisat, booking lintas tengah malam, dan konversi role pengguna.
+
+Tidak ditemukan kegagalan yang memerlukan perubahan kode aplikasi pada tahap ini. Hasil ini membuktikan perilaku HTTP Laravel dan database uji; belum mencakup klik browser, JavaScript/Alpine, tampilan desktop/ponsel, atau mekanisme penguncian MySQL saat persetujuan booking bersamaan. Checklist visual tetap dibiarkan belum dicentang. Test contoh bawaan pada modul lain tidak dianggap bukti bahwa CRUD/pengajuan/persetujuan modul tersebut sudah selesai.
+
+## Perbaikan password admin
+
+**26 Oktober 2026 — perbaikan data akun yang memicu `This password does not use the Bcrypt algorithm`.** Konfigurasi hashing aktif menggunakan Bcrypt. Akun admin manual menyimpan password sebagai teks biasa, sementara tiga akun lainnya sudah memakai Bcrypt. Pengubahan role pada migration sebelumnya tidak mengubah password.
+
+Perbaikan yang dijalankan pada akun admin terkait:
+
+1. Membaca nilai yang sudah tersimpan tanpa menampilkannya ke dokumentasi.
+2. Mengunci baris akun dalam transaksi, memastikan formatnya bukan hash algoritme lain, lalu membuat Bcrypt dengan `Hash::make()` dari password yang sama.
+3. Menyimpan hash, lalu memverifikasi password semula terhadap hash yang tersimpan melalui `Hash::check()`.
+
+| Pemeriksaan | Hasil aktual |
+| --- | --- |
+| Driver hashing | bcrypt |
+| Password admin sebelum perbaikan | Tidak dikenali sebagai hash; tersimpan sebagai teks biasa |
+| Password admin setelah perbaikan | Bcrypt; password yang sama lolos verifikasi |
+| Pemeriksaan akhir seluruh akun | 4 akun memakai Bcrypt; verifikasi algoritme tetap aktif |
+| Role, identitas, dan akun admin | Dipertahankan |
+| Akun lainnya | Tidak diubah; sebelumnya sudah Bcrypt |
+| Sintaks PHP | LoginRequest, AuthenticationTest, dan terjemahan auth lolos `php -l`; `git diff --check` lolos |
+
+Tidak menonaktifkan pemeriksaan algoritme, tidak menerima password plaintext sebagai jalur login alternatif, dan tidak mencantumkan password/hash akun di dokumen. Tidak diperlukan migration baru. Pengguna dapat login dengan NIM/NIP dan password yang sama, lalu memperbarui kata sandi melalui **Profil saya → Keamanan akun**.
+
+Perubahan login oleh pemilik proyek yang memakai NIM/NIP dipertahankan. Validasi `identity_number` memakai string maksimal 30 karakter; pesan kredensial salah dan feature test kini memakai NIM/NIP. `AuthenticationTest` juga memeriksa bahwa password yang disimpan melalui model User menjadi Bcrypt. Cast `hashed` pada User sudah menangani penyimpanan melalui model; jika membuat akun lewat query database langsung, hash harus dibuat terlebih dahulu dengan fasilitas Laravel.
+
+Feature test autentikasi sudah lulus dalam uji alur A1. Perintah untuk mengulang:
+
+```powershell
+php artisan test --filter=AuthenticationTest
+```
+
+Gunakan form registrasi atau model User untuk membuat akun berikutnya. Untuk mengganti password akun yang sudah tersedia, gunakan form profil agar validasi dan hashing tetap berjalan.
+
+## Penyesuaian role pengguna
+
+**26 Oktober 2026 — migration dijalankan oleh Codex sesuai permintaan.** Role yang berlaku sekarang: `admin`, `dosen`, `mahasiswa`. Nilai default database dan registrasi publik adalah **`mahasiswa`**.
+
+File `2026_10_26_105135_ensure_identity_and_role_on_users_table.php` telah diedit pemilik proyek, tetapi database masih memakai enum lama karena migration tersebut sudah Ran. Migration lanjutan **`2026_10_26_172908_update_roles_on_users_table.php`** memperluas enum sementara, mengubah `peminjam` menjadi `mahasiswa`, lalu menetapkan enum final. Tidak membuat ulang tabel users.
+
+Perintah utama yang benar-benar dijalankan:
+
+```powershell
+php artisan make:migration update_roles_on_users_table --table=users
+# File migration diisi sebelum perintah berikut dijalankan.
+php artisan migrate --no-interaction
+php artisan db:table users
+php artisan migrate:status
+```
+
+Hasil migration: **DONE / Ran / batch 4**. Saat pemeriksaan akhir, **14 migration berstatus Ran**, tidak ada Pending. `db:table users` mengonfirmasi `enum('admin','dosen','mahasiswa')` dengan default `mahasiswa`.
+
+| Role | Sebelum | Sesudah |
+| --- | --- | --- |
+| admin | 1 | 1 |
+| peminjam | 3 | 0 |
+| mahasiswa | 0 | 3 |
+| dosen | 0 | 0 |
+| Total akun | 4 | 4 |
+
+Akun admin yang dibuat manual tetap tersedia. Migration hanya mengubah kolom role dan nilai role lama; tidak mengubah password atau membuat akun baru. Tidak menjalankan seeder. Akun dosen dapat ditetapkan melalui pengelolaan oleh admin; form registrasi publik tidak menyediakan pilihan role dan mengabaikan role admin/dosen yang dikirim secara paksa.
+
+Penyesuaian kode: `RegisteredUserController` menyimpan role mahasiswa, keterangan form registrasi diperbarui, `UserFactory` memakai role mahasiswa, label akun hanya memakai tiga role final, dan test registrasi/dashboard disesuaikan. Gate master kelas tetap khusus role admin; mahasiswa maupun dosen tidak memperoleh akses master kelas.
+
+`down()` mengembalikan enum lama admin/peminjam dan menggabungkan dosen serta mahasiswa menjadi peminjam. Karena klasifikasi dosen/mahasiswa tidak tersimpan pada skema lama, hindari rollback untuk sekadar mencoba halaman; gunakan database uji bila memeriksa rollback.
+
+Pemeriksaan sintaks PHP pada migration/controller/model/factory/test lolos. Feature test berikut juga sudah lulus dalam uji alur A1 dan dapat diulang pada SQLite `:memory:` sesuai `phpunit.xml`:
+
+```powershell
+php artisan test --filter='UserRoleMigrationTest|RegistrationTest|DashboardTest|ProfileTest|PasswordUpdateTest'
+```
+
+`UserRoleMigrationTest` memeriksa konversi akun lama, role admin/dosen yang tetap, jumlah akun, email/password yang dipertahankan, serta default role database. Pengujian dashboard mencakup penolakan akses master kelas bagi dosen dan mahasiswa.
+
+Istilah **peminjam** pada uraian fitur/checklist berarti pengguna yang mengajukan booking, yaitu mahasiswa atau dosen. Istilah tersebut tidak lagi menjadi nilai kolom `users.role`; kemunculannya pada log lama atau migration konversi merupakan riwayat perubahan.
+
+## A1 — Profil pengguna
+
+Halaman `/profile` memakai navbar/sidebar dashboard yang sama. Menu **Pengaturan profil** menandai halaman aktif. Tersedia ringkasan akun, form informasi pribadi, dan form keamanan dengan tombol tampil/sembunyikan kata sandi. Tidak memerlukan paket atau migration baru.
+
+| Data | Aturan |
+| --- | --- |
+| Nama lengkap | Wajib, teks, maksimal 255 karakter |
+| NIM / NIP | Wajib saat menyimpan profil, teks maksimal 30 karakter, unik selain akun sendiri; nol di depan dipertahankan |
+| Email | Wajib, format email/huruf kecil, maksimal 255 karakter, unik selain akun sendiri; status verifikasi dikosongkan jika email berubah |
+| Role | Informasi saja; request perubahan role ditolak dan controller hanya menyimpan nama, identitas, email |
+| Kata sandi | Form terpisah; memerlukan kata sandi saat ini, kata sandi baru minimal 8 karakter sesuai aturan Laravel saat ini, dan konfirmasi yang cocok |
+
+Label role menampilkan `Administrator`, `Dosen`, atau `Mahasiswa` sesuai nilai akun. Enum database telah diperbarui melalui migration lanjutan pada bagian Penyesuaian role pengguna. Akun lama tanpa NIM/NIP tampil sebagai **Belum diisi** dan diminta melengkapinya ketika menyimpan profil.
+
+Fitur hapus akun bawaan tetap tersedia pada bagian **Pengaturan akun**. Pengguna harus memasukkan kata sandi yang benar. Akun yang menjadi peminjam atau pemeriksa pada riwayat booking ditolak penghapusannya dengan pesan yang jelas; pengguna tetap login jika penolakan terjadi karena riwayat.
+
+| File | Tanggung jawab |
+| --- | --- |
+| `resources/views/profile/edit.blade.php` dan `partials/` | Ringkasan akun, form profil/kata sandi/penghapusan, pesan berhasil dan error terpisah |
+| `resources/views/components/profile-field.blade.php` | Label, old input, validasi per error bag, ID unik, dan tombol tampil/sembunyikan password |
+| `resources/css/profile.css` | Tampilan profil responsif, diimpor dari `resources/css/app.css`; perubahan CSS dashboard milik pengguna dipertahankan |
+| `app/Http/Requests/ProfileUpdateRequest.php` | Validasi NIM/NIP/email unik, field wajib, dan larangan perubahan role |
+| `app/Http/Controllers/ProfileController.php` | Hanya mengubah pengguna login dan field yang diizinkan; pemeriksaan riwayat sebelum hapus akun |
+| `app/Http/Controllers/Auth/PasswordController.php` | Validasi kata sandi saat ini, konfirmasi, dan pesan Indonesia pada error bag `updatePassword` |
+| `app/Models/User.php` | Label role untuk profil dan menu akun |
+| `tests/Feature/ProfileTest.php`, `tests/Feature/Auth/PasswordUpdateTest.php` | Skenario profil, kepemilikan akun, role, unik, kata sandi, dan larangan hapus akun yang memiliki riwayat |
+
+Untuk mencoba, buka `/profile` setelah login. Gunakan proses `npm.cmd run dev` yang sedang berjalan atau bangun ulang aset melalui `npm.cmd run build`. Perintah build/server/feature test di bawah tetap disiapkan untuk Anda jalankan sendiri.
+
+```powershell
+php artisan test --filter='ProfileTest|PasswordUpdateTest'
+```
+
+Konfigurasi test menggunakan SQLite `:memory:` sesuai `phpunit.xml`. Test juga memeriksa upaya mengirim role admin atau password melalui endpoint profil, perubahan data pengguna lain lewat ID palsu, serta kata sandi lama yang salah/konfirmasi baru yang tidak cocok.
+
+- [ ] A1PF01 — Navbar/sidebar sama dengan dashboard; ringkasan menampilkan nama, NIM/NIP, email, dan label role yang sesuai.
+- [x] A1PF02 — Simpan perubahan nama, NIM/NIP, dan email berhasil; nilai lama milik sendiri tetap lolos unique; nilai milik akun lain ditolak.
+- [x] A1PF03 — Mengirim field role lewat request ditolak; ID palsu tidak mengubah akun lain; password tidak berubah lewat form profil.
+- [x] A1PF04 — Form kata sandi hanya berhasil dengan kata sandi lama benar dan konfirmasi cocok; error memakai bag form terkait.
+- [ ] A1PF05 — Profil nyaman dipakai pada ponsel, navigasi keyboard dan tombol tampil/sembunyikan kata sandi bekerja.
+- [x] A1PF06 — Penghapusan akun yang punya riwayat ditolak tanpa menghapus data atau mengakhiri login; penghapusan akun tanpa riwayat tetap memerlukan password.
+- [x] A1PF07 — Feature test profil dan kata sandi lolos; hasil dan versi kerja dicatat pada Hasil uji alur A1.
+
+| Pemeriksaan | Hasil aktual | Tanggal/pelaksana |
+| --- | --- | --- |
+| Sintaks PHP/CSS dan kompilasi Blade | Lolos `php -l` pada 6 file, parsing PostCSS, pemeriksaan sintaks hasil kompilasi 7 template Blade, dan `git diff --check` | 26 Oktober 2026 / Codex |
+| Feature test profil/kata sandi | ProfileTest 13 kasus dan PasswordUpdateTest 5 kasus lulus | 26 Oktober 2026 / Codex |
+| Build aset dan pemeriksaan browser desktop/ponsel | Belum dijalankan | — |
 
 ## Log eksekusi migration
 
@@ -47,7 +212,7 @@ php artisan db:table bookings
 | `2026_10_26_105134_add_details_to_bookings_table` | DONE / Ran / batch 3 |
 | `2026_10_26_105135_ensure_identity_and_role_on_users_table` | DONE / Ran / batch 3 |
 
-Hasil akhir: **13 migration berstatus Ran, tidak ada Pending.** Preflight migration lolos untuk tabel fitur awal yang kosong. Tidak menjalankan `migrate:fresh`, rollback, atau seeder.
+Hasil pada tahap ini sebelum penyesuaian role: **13 migration berstatus Ran, tidak ada Pending.** Preflight migration lolos untuk tabel fitur awal yang kosong. Tidak menjalankan `migrate:fresh`, rollback, atau seeder. Status terbaru tersedia di bagian Penyesuaian role pengguna.
 
 | Tabel | Field yang kini tersedia selain id/timestamps |
 | --- | --- |
@@ -70,7 +235,7 @@ Kode disiapkan pada **26 Oktober 2026**. Dashboard menampilkan navbar dengan log
 | Bookingan saya | `GET /bookings` | Riwayat milik pengguna yang login, pagination, status dan alasan penolakan bila ada |
 | Master data kelas | `GET /admin/rooms` | Daftar ruang aktif/nonaktif, pencarian dan pagination; khusus admin |
 
-Mahasiswa dan dosen memakai akun `peminjam` pada skema role saat ini. Akun `admin` mendapat menu tambahan **Master data kelas**. Gate `view-room-master` didefinisikan di `app/Providers/AppServiceProvider.php`, dipakai melalui `@can` pada sidebar dan middleware `can:view-room-master` pada route. Menyembunyikan menu bukan satu-satunya pembatasan: request langsung oleh peminjam harus menghasilkan 403. Riwayat pribadi selalu difilter `user_id` pengguna login, termasuk bagi admin.
+Mahasiswa dan dosen memakai role terpisah `mahasiswa` dan `dosen`. Akun `admin` mendapat menu tambahan **Master data kelas**. Gate `view-room-master` didefinisikan di `app/Providers/AppServiceProvider.php`, dipakai melalui `@can` pada sidebar dan middleware `can:view-room-master` pada route. Menyembunyikan menu bukan satu-satunya pembatasan: request langsung oleh mahasiswa/dosen harus menghasilkan 403. Riwayat pribadi selalu difilter `user_id` pengguna login, termasuk bagi admin.
 
 **Aturan kalender yang dipilih:** jumlah ruang aktif yang memiliki setidaknya satu booking `approved` bertumpang tindih dengan tanggal tersebut, dibagi jumlah seluruh ruang aktif. Ruangan dihitung sekali per tanggal. Booking `pending`, `rejected`, `cancelled`, serta ruang nonaktif tidak dihitung.
 
@@ -101,7 +266,7 @@ php artisan config:clear
 php artisan migrate:status
 ```
 
-Untuk melihat tampilan, jalankan `php artisan serve` dan `npm.cmd run dev` di dua terminal terpisah, lalu login dan buka `/dashboard`. Alternatif aset statis: `npm.cmd run build`. Semua perintah aplikasi, build, dan feature test pada bagian ini belum dijalankan oleh Codex.
+Untuk melihat tampilan, jalankan `php artisan serve` dan `npm.cmd run dev` di dua terminal terpisah, lalu login dan buka `/dashboard`. Alternatif aset statis: `npm.cmd run build`. Feature test dashboard sudah dijalankan dan lulus dalam uji alur A1; build dan pemeriksaan visual browser belum dijalankan oleh Codex.
 
 ```powershell
 php artisan test --filter=DashboardTest
@@ -115,37 +280,37 @@ $user->role = 'admin';
 $user->save();
 ```
 
-Registrasi publik tetap menghasilkan `peminjam`. Setelah itu buka dashboard memakai dua akun uji berbeda dan buktikan hasilnya:
+Registrasi publik selalu menghasilkan `mahasiswa`. Setelah itu buka dashboard memakai akun uji dengan role berbeda dan buktikan hasilnya:
 
 - [ ] A1DB01 — Dashboard terbuka setelah login; navbar pencarian dan ketiga kartu menuju halaman/kalender yang sesuai.
 - [ ] A1DB02 — Bulan awal sesuai tanggal aplikasi; filter bulan/tahun, sebelumnya/berikutnya, Hari ini, dan tanggal terpilih bekerja.
 - [ ] A1DB03 — Warna sesuai data booking disetujui; data kosong tampil netral; rincian waktu tidak menganggap seluruh hari penuh.
-- [ ] A1DB04 — Riwayat hanya menampilkan booking milik akun yang login; filter pencarian ruangan dan pagination bekerja.
-- [ ] A1DB05 — Peminjam tidak melihat menu master dan mendapat 403 pada `/admin/rooms`; admin melihat menu dan daftar aktif/nonaktif.
+- [x] A1DB04 — Riwayat hanya menampilkan booking milik akun yang login; filter pencarian ruangan dan pagination bekerja.
+- [x] A1DB05 — Mahasiswa/dosen tidak melihat menu master dan mendapat 403 pada `/admin/rooms`; admin melihat menu dan daftar aktif/nonaktif.
 - [ ] A1DB06 — Sidebar dapat dibuka/ditutup pada ponsel; kalender dapat digeser; tombol profil dan logout bekerja.
-- [ ] A1DB07 — DashboardTest lolos; isi tanggal, commit dan hasil aktual sebagai bukti.
+- [x] A1DB07 — DashboardTest lolos; tanggal, versi kerja dan hasil aktual dicatat pada Hasil uji alur A1.
 
 | Pemeriksaan | Hasil aktual | Tanggal/pelaksana |
 | --- | --- | --- |
 | Sintaks PHP/CSS | Lolos `php -l`, parsing PostCSS, dan `git diff --check`; belum membuktikan perilaku aplikasi | 26 Oktober 2026 / Codex |
-| Feature test dashboard dan akses | Belum dijalankan | — |
+| Feature test dashboard dan akses | DashboardTest 12 kasus dan skenario integrasi A1 terkait lulus | 26 Oktober 2026 / Codex |
 | Build aset dan tampilan browser | Belum dijalankan | — |
 
 ## A1 — Halaman login dan registrasi
 
-Pemilik: **Anda (A1)**. Kode awal disiapkan pada **26 Oktober 2026**, mengikuti referensi dashboard: latar abu muda, panel putih, warna navy/teal, dan sudut membulat. Status ini menunjukkan kode tersedia; build, test, dan pemeriksaan browser belum dijalankan oleh Codex.
+Pemilik: **Anda (A1)**. Kode awal disiapkan pada **26 Oktober 2026**, mengikuti referensi dashboard: latar abu muda, panel putih, warna navy/teal, dan sudut membulat. Feature test autentikasi sudah lulus dalam uji alur A1; build dan pemeriksaan visual browser belum dijalankan oleh Codex.
 
 | Bagian | File | Perilaku yang disiapkan |
 | --- | --- | --- |
 | Layout auth | `resources/views/components/auth-layout.blade.php` | Identitas Ruang FMIPA, navigasi masuk/daftar, ilustrasi denah, layout responsif |
 | Field form | `resources/views/components/auth-field.blade.php` | Label, old input selain password, error per field, tombol tampil/sembunyikan kata sandi |
-| Login | `resources/views/auth/login.blade.php` | Email, kata sandi, ingat saya, lupa kata sandi, tautan daftar |
+| Login | `resources/views/auth/login.blade.php` | NIM/NIP, kata sandi, ingat saya, lupa kata sandi, tautan daftar |
 | Registrasi | `resources/views/auth/register.blade.php` | Nama, NIM/NIP, email, kata sandi dan konfirmasi |
 | Tampilan | `resources/css/auth.css`, diimpor oleh `resources/css/app.css` | Gaya auth dengan class khusus; tidak memerlukan paket baru |
 | Validasi registrasi | `app/Http/Requests/Auth/RegisterRequest.php` | NIM/NIP wajib/unik, email unik, konfirmasi password, pesan form dalam bahasa Indonesia |
-| Penyimpanan akun | `app/Http/Controllers/Auth/RegisteredUserController.php`, `app/Models/User.php` | Menyimpan input tervalidasi dan hash password; role ditetapkan server menjadi `peminjam` |
+| Penyimpanan akun | `app/Http/Controllers/Auth/RegisteredUserController.php`, `app/Models/User.php` | Menyimpan input tervalidasi dan hash password; role ditetapkan server menjadi `mahasiswa` |
 | Pesan login | `app/Http/Requests/Auth/LoginRequest.php`, `lang/id/auth.php` | Pesan input, kredensial salah, dan batas percobaan login |
-| Pengujian | `tests/Feature/Auth/RegistrationTest.php` | Registrasi valid, hash password, role peminjam meski request mengirim admin, NIM/NIP wajib/unik, konfirmasi tidak cocok |
+| Pengujian | `tests/Feature/Auth/RegistrationTest.php` | Registrasi valid, hash password, role mahasiswa meski request mengirim admin/dosen, NIM/NIP wajib/unik, konfirmasi tidak cocok |
 
 **Sebelum mencoba:** pastikan migration `2026_10_26_105135_ensure_identity_and_role_on_users_table` sudah berstatus `Ran`, karena form registrasi kini menyimpan `identity_number` dan `role`. Jika masih `Pending`, ikuti bagian perbaikan migration di bawah, lalu jalankan `php artisan migrate` ketika kondisi database sudah sesuai.
 
@@ -178,17 +343,17 @@ php artisan test --filter='AuthenticationTest|RegistrationTest'
 
 - [ ] A1UI01 — Login dan registrasi terbuka dengan style baru; navigasi antarhalaman bekerja.
 - [ ] A1UI02 — Tampilan tidak melebar keluar layar pada ponsel; label, fokus keyboard, dan tombol tampil/sembunyikan kata sandi berfungsi.
-- [ ] A1UI03 — Registrasi valid menyimpan NIM/NIP (termasuk angka nol di depan), login otomatis, dan menuju dashboard.
+- [x] A1UI03 — Registrasi valid menyimpan NIM/NIP (termasuk angka nol di depan), login otomatis, dan menuju dashboard.
 - [ ] A1UI04 — Email/NIM/NIP duplikat dan konfirmasi password yang salah ditolak dengan pesan per field; nilai password tidak ditampilkan kembali.
 - [ ] A1UI05 — Login salah menampilkan pesan; login benar, ingat saya, dan logout tetap bekerja.
-- [ ] A1UI06 — Seluruh skenario AuthenticationTest dan RegistrationTest lolos; simpan hasil aktual/commit sebagai bukti.
+- [x] A1UI06 — Seluruh skenario AuthenticationTest dan RegistrationTest lolos; hasil dan versi kerja dicatat pada Hasil uji alur A1.
 
 | Pemeriksaan | Hasil aktual | Tanggal/pelaksana |
 | --- | --- | --- |
 | Sintaks PHP pada controller/request/model/test/terjemahan | Lolos pemeriksaan `php -l` oleh Codex; ini belum membuktikan perilaku aplikasi | 26 Oktober 2026 / Codex |
 | Sintaks CSS | Lolos parsing PostCSS; ini belum membuktikan hasil build atau tampilan browser | 26 Oktober 2026 / Codex |
 | Build aset dan render Blade/browser | Belum dijalankan | — |
-| Feature test autentikasi | Belum dijalankan | — |
+| Feature test autentikasi | AuthenticationTest 5 kasus dan RegistrationTest 7 kasus lulus | 26 Oktober 2026 / Codex |
 | Uji alur login/registrasi pada desktop dan ponsel | Belum dijalankan | — |
 
 Langkah A1 berikutnya: implementasi `EnsureUserIsAdmin`, perlindungan route admin, akun contoh di `UserSeeder`, serta pembaruan NIM/NIP pada profil. Halaman lupa/reset password masih menggunakan tampilan bawaan Breeze.
@@ -211,7 +376,7 @@ Perubahan yang disiapkan:
 | `2026_10_26_105132_add_name_to_facilities_table.php` | Menambah nama fasilitas |
 | `2026_10_26_105133_fix_facility_room_table.php` | Mengubah nama `faciity_room` menjadi `facility_room`, lalu menambah foreign key dan unique pasangan |
 | `2026_10_26_105134_add_details_to_bookings_table.php` | Menambah data pengajuan, status, pemeriksa, foreign key, dan index jadwal |
-| `2026_10_26_105135_ensure_identity_and_role_on_users_table.php` | Menambah identitas/role jika belum ada; identitas nullable/unik, role default peminjam |
+| `2026_10_26_105135_ensure_identity_and_role_on_users_table.php` | Menambah identitas/role jika belum ada; identitas nullable/unik, role default mahasiswa; database lama diperbarui migration lanjutan 172908 |
 
 File `105131`–`105134` yang sebelumnya bernama `create_*` diganti namanya karena sekarang mengubah tabel lama. Berdasarkan log, eksekusi berhenti pada pembuatan ulang `rooms`; belum ada verifikasi langsung terhadap tabel `migrations` di database Anda.
 
@@ -276,7 +441,7 @@ Audit file pada **26 Oktober 2026**; status berikut bukan hasil menjalankan apli
 
 ## Keputusan paket dan stack
 
-Rencana persiapan: **Laravel 13 + Breeze Blade + Alpine + PHPUnit**, mengikuti materi autentikasi dan latihan Blade. Role admin/peminjam memakai kolom role, middleware, dan policy Laravel. CRUD, validasi, pagination, factory, transaksi, serta upload sudah tersedia di Laravel.
+Rencana persiapan: **Laravel 13 + Breeze Blade + Alpine + PHPUnit**, mengikuti materi autentikasi dan latihan Blade. Role admin/dosen/mahasiswa memakai kolom role, middleware, dan policy Laravel. CRUD, validasi, pagination, factory, transaksi, serta upload sudah tersedia di Laravel.
 
 | Kebutuhan | Persiapan | Keterangan |
 | --- | --- | --- |
@@ -463,7 +628,7 @@ php artisan make:middleware EnsureUserIsAdmin
 php artisan make:seeder UserSeeder
 ```
 
-Breeze menangani autentikasi dasar. Tambahkan NIM/NIP dan role secara manual; pendaftaran publik harus selalu menghasilkan peminjam. Daftarkan alias middleware di `bootstrap/app.php`, lalu terapkan middleware dan policy pada route/controller. Layout Breeze memakai komponen Blade; tetap buat penerapan `@extends/@section/@yield` yang relevan untuk BL07 bila mengikuti checklist tersebut.
+Breeze menangani autentikasi dasar. Tambahkan NIM/NIP dan role secara manual; pendaftaran publik selalu menghasilkan mahasiswa. Daftarkan alias middleware khusus bila diperlukan di `bootstrap/app.php`, lalu terapkan middleware dan policy pada route/controller. Layout Breeze memakai komponen Blade; tetap buat penerapan `@extends/@section/@yield` yang relevan untuk BL07 bila mengikuti checklist tersebut.
 
 - [x] SET14 — A3/A4 menyiapkan pengajuan, pemeriksaan, jadwal, dan laporan.
 
@@ -484,7 +649,7 @@ Rancangan minimum untuk dibahas sebelum mengisi file:
 
 | Tabel | Kolom/relasi yang direncanakan |
 | --- | --- |
-| users | identitas NIM/NIP dan role admin/peminjam, selain kolom bawaan |
+| users | identitas NIM/NIP dan role admin/dosen/mahasiswa, selain kolom bawaan |
 | rooms | nama/kode unik, kapasitas, lokasi, deskripsi, path foto, status aktif |
 | facilities | nama fasilitas dan atribut yang memang dipakai |
 | facility_room | room_id, facility_id, unique pasangan; timestamps jika relasi menggunakan `withTimestamps()` |
@@ -730,7 +895,7 @@ Sumber: S9 hlm. 3–14, 16–20; S1 hlm. 14, 28–31; S2 hlm. 34–35; S8 hlm. 3
 - [ ] AU04 — Melindungi halaman internal dengan middleware auth dan halaman login/daftar dengan guest sesuai kebutuhan.
 - [ ] AU05 — Mengambil identitas pengguna login melalui Auth atau $request->user().
 - [ ] AU06 — Menjaga session login dengan benar dan memastikan logout mengakhiri akses sesi pengguna.
-- [ ] AU07 — Menambahkan data profil NIM/NIP serta role; registrasi publik selalu menghasilkan peminjam.
+- [ ] AU07 — Menambahkan data profil NIM/NIP serta role admin/dosen/mahasiswa; registrasi publik selalu menghasilkan mahasiswa.
 - [ ] AU08 — Memeriksa hak akses di server agar peminjam tidak dapat menjalankan aksi admin melalui URL langsung.
 - [ ] AU09 — Menggunakan policy untuk kepemilikan peminjaman atau izin pengelolaan ruangan, dan @can bila sesuai untuk tombol.
 - [ ] AU10 — Membatasi percobaan login dengan rate limiting yang tersedia pada implementasi autentikasi.

@@ -38,8 +38,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Registrasi publik selalu menjadi peminjam, terlepas dari input role.
-        $user->role = 'peminjam';
+        // Registrasi publik selalu menjadi mahasiswa, terlepas dari input role.
+        $user->role = 'mahasiswa';
         $user->save();
 
         event(new Registered($user));

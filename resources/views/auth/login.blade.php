@@ -12,7 +12,7 @@
     <form method="POST" action="{{ route('login') }}" class="auth-form" x-data="{ submitting: false }" x-on:submit="submitting = true">
         @csrf
 
-        <x-auth-field name="email" label="Alamat email" type="email" placeholder="nama@contoh.ac.id" required autofocus autocomplete="username" maxlength="255" />
+        <x-auth-field name="identity_number" label="NIM/NIP" type="text" placeholder="Masukkan NIP/NIM Anda" required autofocus autocomplete="username" maxlength="30" />
         <x-auth-field name="password" label="Kata sandi" type="password" placeholder="Masukkan kata sandi Anda" required autocomplete="current-password" />
 
         <div class="auth-form-options">

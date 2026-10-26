@@ -1,48 +1,26 @@
-<section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Update Password') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
-        </p>
+<section id="profile-password" class="profile-card" aria-labelledby="profile-password-title">
+    <header class="profile-card-heading">
+        <span class="profile-section-icon is-teal"><x-dashboard-icon name="lock" /></span>
+        <div><h2 id="profile-password-title">Keamanan akun</h2><p>Perbarui kata sandi untuk menjaga akses akun Anda.</p></div>
     </header>
 
-    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
+    @if(session('status') === 'password-updated')
+        <div class="profile-success" role="status"><x-dashboard-icon name="check" /> Kata sandi berhasil diperbarui.</div>
+    @endif
+
+    @if($errors->getBag('updatePassword')->any())
+        <div class="profile-validation-summary" role="alert"><x-dashboard-icon name="info" /><p>Kata sandi belum diperbarui. Periksa isian yang ditandai di bawah.</p></div>
+    @endif
+
+    <form method="POST" action="{{ route('password.update') }}" class="profile-form" x-data="{ submitting: false }" x-on:submit="submitting = true">
         @csrf
-        @method('put')
+        @method('PUT')
 
-        <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
-            <x-text-input id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
-            <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
+        <x-profile-field name="current_password" id="profile_current_password" label="Kata sandi saat ini" type="password" error-bag="updatePassword" placeholder="Masukkan kata sandi saat ini" required autocomplete="current-password" />
+        <div class="profile-field-grid">
+            <x-profile-field name="password" id="profile_new_password" label="Kata sandi baru" type="password" error-bag="updatePassword" placeholder="Minimal 8 karakter" hint="Gunakan minimal 8 karakter." required minlength="8" autocomplete="new-password" />
+            <x-profile-field name="password_confirmation" id="profile_password_confirmation" label="Konfirmasi kata sandi baru" type="password" error-bag="updatePassword" placeholder="Ulangi kata sandi baru" required minlength="8" autocomplete="new-password" />
         </div>
-
-        <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" />
-            <x-text-input id="update_password_password" name="password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
-            <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
-        </div>
-
-        <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
-            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
-            <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            @if (session('status') === 'password-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
-            @endif
-        </div>
+        <div class="profile-form-footer"><span>Kata sandi tidak ditampilkan kembali setelah disimpan.</span><button class="dash-button is-primary" type="submit" x-bind:disabled="submitting"><span x-text="submitting ? 'Memperbarui…' : 'Perbarui kata sandi'">Perbarui kata sandi</span><x-dashboard-icon name="lock" /></button></div>
     </form>
 </section>

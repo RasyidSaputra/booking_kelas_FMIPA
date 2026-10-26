@@ -17,7 +17,7 @@
             <x-auth-field name="password_confirmation" label="Konfirmasi kata sandi" type="password" placeholder="Ulangi kata sandi" required minlength="8" autocomplete="new-password" />
         </div>
 
-        <p class="auth-registration-note"><span aria-hidden="true">ⓘ</span> Akun baru terdaftar sebagai peminjam ruangan.</p>
+        <p class="auth-registration-note"><span aria-hidden="true">ⓘ</span> Akun baru terdaftar sebagai mahasiswa.</p>
 
         <button class="auth-submit" type="submit" x-bind:disabled="submitting">
             <span x-text="submitting ? 'Membuat akun…' : 'Buat akun'">Buat akun</span>

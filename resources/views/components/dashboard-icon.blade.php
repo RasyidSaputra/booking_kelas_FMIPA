@@ -19,5 +19,10 @@
         @case('users') <circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-17a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 4v3"/> @break
         @case('info') <circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/> @break
         @case('plus') <path d="M12 5v14M5 12h14"/> @break
+        @case('lock') <rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/> @break
+        @case('shield') <path d="m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6l8-3Z"/><path d="m8 12 3 3 5-5"/> @break
+        @case('eye') <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/> @break
+        @case('eye-off') <path d="m3 3 18 18M10 5.2A10 10 0 0 1 12 5c6 0 10 7 10 7a19 19 0 0 1-3.3 4.1M6 6a20 20 0 0 0-4 6s4 7 10 7a11 11 0 0 0 4.4-.9m-6.5-8.2a3 3 0 0 0 4.2 4.2"/> @break
+        @case('check') <path d="m5 12 4 4L19 6"/> @break
     @endswitch
 </svg>

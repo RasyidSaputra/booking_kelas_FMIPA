@@ -33,7 +33,7 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
             'identity_number' => '00123456789',
-            'role' => 'peminjam',
+            'role' => 'mahasiswa',
         ]);
         $this->assertTrue(Hash::check('password', User::where('email', 'test@example.com')->firstOrFail()->password));
     }
@@ -50,7 +50,22 @@ class RegistrationTest extends TestCase
         ]);
 
         $response->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('users', ['email' => 'test@example.com', 'role' => 'peminjam']);
+        $this->assertDatabaseHas('users', ['email' => 'test@example.com', 'role' => 'mahasiswa']);
+    }
+
+    public function test_public_registration_cannot_choose_a_lecturer_role(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Test User',
+            'identity_number' => '00123456789',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'role' => 'dosen',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('users', ['email' => 'test@example.com', 'role' => 'mahasiswa']);
     }
 
     public function test_registration_requires_an_identity_number(): void

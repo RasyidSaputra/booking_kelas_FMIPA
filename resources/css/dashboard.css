@@ -384,11 +384,11 @@
     align-items: center;
     gap: 8px;
     padding: 9px 12px;
-    background: white;
-    border: 1px solid var(--dash-line);
+    background: var(--dash-navy);
+    border-color: var(--dash-navy);
     border-radius: 6px;
     font-size: 10px;
-    color: #7d8d97;
+    color: white;
     white-space: nowrap;
 }
 .dash-today-label svg {

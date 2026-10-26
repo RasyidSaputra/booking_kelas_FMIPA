@@ -17,6 +17,16 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public function roleLabel(): string
+    {
+        return match ($this->role) {
+            'admin' => 'Administrator',
+            'dosen' => 'Dosen',
+            'mahasiswa' => 'Mahasiswa',
+            default => 'Belum ditentukan',
+        };
+    }
+
     /**
      * Get the attributes that should be cast.
      *
