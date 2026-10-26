@@ -222,7 +222,7 @@ php artisan make:seeder UserSeeder
 
 Breeze menangani autentikasi dasar. Tambahkan NIM/NIP dan role secara manual; pendaftaran publik harus selalu menghasilkan peminjam. Daftarkan alias middleware di `bootstrap/app.php`, lalu terapkan middleware dan policy pada route/controller. Layout Breeze memakai komponen Blade; tetap buat penerapan `@extends/@section/@yield` yang relevan untuk BL07 bila mengikuti checklist tersebut.
 
-- [ ] SET14 — A3/A4 menyiapkan pengajuan, pemeriksaan, jadwal, dan laporan.
+- [x] SET14 — A3/A4 menyiapkan pengajuan, pemeriksaan, jadwal, dan laporan.
 
 ```powershell
 php artisan make:model Booking -mf
