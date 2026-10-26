@@ -3,16 +3,41 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class RoomController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request): View
     {
-        //
+        $input = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+        $search = trim($input['q'] ?? '');
+        $date = CarbonImmutable::parse($input['date'] ?? today()->toDateString())->locale('id');
+        $rooms = DB::table('rooms')
+            ->where('is_active', true)
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('code', 'like', '%'.$search.'%')
+                        ->orWhere('location', 'like', '%'.$search.'%');
+                });
+            })
+            ->orderBy('name')->paginate(12)->withQueryString();
+        $schedule = DB::table('bookings')->where('status', 'approved')
+            ->whereIn('room_id', $rooms->pluck('id'))
+            ->where('starts_at', '<', $date->addDay()->toDateTimeString())
+            ->where('ends_at', '>', $date->toDateTimeString())
+            ->orderBy('starts_at')->get(['room_id', 'starts_at', 'ends_at'])->groupBy('room_id');
+
+        return view('rooms.index', compact('rooms', 'search', 'date', 'schedule'));
     }
 
     /**

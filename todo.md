@@ -1,9 +1,11 @@
 # Persiapan dan TODO Laravel — Peminjaman Ruangan FMIPA UNRI
 
-Dokumen ini berisi urutan persiapan yang dijalankan sendiri oleh anggota tim, lalu checklist penerapan materi. Perintah di bawah **belum dijalankan oleh Codex**. Audit hanya membaca file; keberhasilan instalasi, build, migration, dan test harus dicatat setelah Anda menjalankannya.
+Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah contoh belum otomatis dianggap berhasil. Pengecualian yang sudah dijalankan sesuai permintaan Anda dicatat pada **Log eksekusi migration** di bawah; build dan feature test masih belum dijalankan oleh Codex.
 
 ## Navigasi
 
+- [Log eksekusi migration](#log-eksekusi-migration)
+- [A1 — Dashboard utama dan akses admin](#a1--dashboard-utama-dan-akses-admin)
 - [A1 — Halaman login dan registrasi](#a1--halaman-login-dan-registrasi)
 - [Perbaikan migration tabel](#perbaikan-migration-tabel)
 - [Kondisi awal proyek](#kondisi-awal-proyek)
@@ -15,6 +17,119 @@ Dokumen ini berisi urutan persiapan yang dijalankan sendiri oleh anggota tim, la
 - [P4 — Pemeriksaan dan cara menjalankan](#p4--pemeriksaan-dan-cara-menjalankan)
 - [P5 — Urutan kerja dan bukti eksekusi](#p5--urutan-kerja-dan-bukti-eksekusi)
 - [Checklist penerapan materi](#checklist-penerapan-materi-laravel)
+
+## Log eksekusi migration
+
+**26 Oktober 2026 — Codex, atas permintaan menjalankan migration.** Database MySQL lokal: `kelasku`.
+
+Penyebab error `Unknown column 'is_active'`: tabel `rooms` masih hanya memiliki `id` dan timestamps, sementara lima migration penambahan field belum dijalankan. File migration yang dibutuhkan sudah tersedia, sehingga tidak perlu membuat migration duplikat atau mereset database.
+
+Perintah yang benar-benar dijalankan:
+
+```powershell
+php artisan migrate:status
+php artisan db:table rooms
+php artisan db:table facilities
+php artisan db:table bookings
+php artisan db:table users
+php artisan migrate --no-interaction
+php artisan migrate:status
+php artisan db:table rooms
+php artisan db:table facility_room
+php artisan db:table bookings
+```
+
+| Migration | Hasil |
+| --- | --- |
+| `2026_10_26_105131_add_details_to_rooms_table` | DONE / Ran / batch 3 |
+| `2026_10_26_105132_add_name_to_facilities_table` | DONE / Ran / batch 3 |
+| `2026_10_26_105133_fix_facility_room_table` | DONE / Ran / batch 3 |
+| `2026_10_26_105134_add_details_to_bookings_table` | DONE / Ran / batch 3 |
+| `2026_10_26_105135_ensure_identity_and_role_on_users_table` | DONE / Ran / batch 3 |
+
+Hasil akhir: **13 migration berstatus Ran, tidak ada Pending.** Preflight migration lolos untuk tabel fitur awal yang kosong. Tidak menjalankan `migrate:fresh`, rollback, atau seeder.
+
+| Tabel | Field yang kini tersedia selain id/timestamps |
+| --- | --- |
+| rooms | `code` unik, `name`, `capacity`, `location`, `description` nullable, `photo_path` nullable, `is_active` default true |
+| facilities | `name` unik |
+| facility_room | `room_id`, `facility_id`; foreign key dan unique pasangan; nama typo lama sudah dikoreksi |
+| bookings | `user_id`, `room_id`, `purpose`, `participant_count`, `starts_at`, `ends_at`, `status` default pending, `reviewed_by` nullable, `reviewed_at` nullable, `rejection_reason` nullable; foreign key dan index jadwal |
+| users | `identity_number` nullable/unik dan `role` default peminjam telah tersedia sebelum migration terbaru dan dipertahankan |
+
+Verifikasi struktur melalui `db:table` mengonfirmasi `rooms.is_active` dan `rooms.name`, foreign key pivot, serta field/index/foreign key booking. Halaman dashboard dapat dicoba ulang setelah refresh; render dashboard di browser dan feature test belum diuji dalam eksekusi ini. Catatan belum dijalankan pada bagian lama di bawah merupakan riwayat tahap sebelumnya; gunakan log ini untuk status migration terbaru.
+
+## A1 — Dashboard utama dan akses admin
+
+Kode disiapkan pada **26 Oktober 2026**. Dashboard menampilkan navbar dengan logo Laravel/pencarian, sidebar responsif, tiga kartu aksi, kalender bulanan, dan jadwal pada tanggal terpilih. Data berasal dari database; tidak ada jadwal contoh atau indikator ramai yang dibuat secara acak.
+
+| Halaman | Route | Perilaku |
+| --- | --- | --- |
+| Dashboard | `GET /dashboard` | Bookingan saya, Booking ruang, Cek ketersediaan; kalender default bulan sekarang |
+| Daftar ruang | `GET /rooms` | Pencarian nama/kode/lokasi, filter tanggal, daftar ruang aktif dan jam booking disetujui |
+| Bookingan saya | `GET /bookings` | Riwayat milik pengguna yang login, pagination, status dan alasan penolakan bila ada |
+| Master data kelas | `GET /admin/rooms` | Daftar ruang aktif/nonaktif, pencarian dan pagination; khusus admin |
+
+Mahasiswa dan dosen memakai akun `peminjam` pada skema role saat ini. Akun `admin` mendapat menu tambahan **Master data kelas**. Gate `view-room-master` didefinisikan di `app/Providers/AppServiceProvider.php`, dipakai melalui `@can` pada sidebar dan middleware `can:view-room-master` pada route. Menyembunyikan menu bukan satu-satunya pembatasan: request langsung oleh peminjam harus menghasilkan 403. Riwayat pribadi selalu difilter `user_id` pengguna login, termasuk bagi admin.
+
+**Aturan kalender yang dipilih:** jumlah ruang aktif yang memiliki setidaknya satu booking `approved` bertumpang tindih dengan tanggal tersebut, dibagi jumlah seluruh ruang aktif. Ruangan dihitung sekali per tanggal. Booking `pending`, `rejected`, `cancelled`, serta ruang nonaktif tidak dihitung.
+
+- Hijau: kurang dari 40% ruang memiliki jadwal disetujui pada hari itu.
+- Kuning: 40% sampai kurang dari 80%.
+- Merah: 80% atau lebih.
+- Netral: belum ada ruang aktif, sehingga ketersediaan belum dapat dihitung.
+
+Ini adalah indikator kepadatan berdasarkan **jumlah ruang**, bukan persentase jam pemakaian. Ruangan yang terpakai satu jam tetap tercatat terjadwal pada hari tersebut; lihat rincian waktu sebelum memilih ruangan. Rentang waktu memakai `starts_at < akhir_hari` dan `ends_at > awal_hari`, sehingga waktu selesai tepat tengah malam tidak ikut memenuhi hari berikutnya. Filter bulan/tahun mendukung tahun 2000–2100, termasuk Februari tahun kabisat. Kalender tidak mengungkap pemilik atau tujuan booking pengguna lain; hanya ruangan dan waktu pemakaian.
+
+| File utama | Tanggung jawab |
+| --- | --- |
+| `resources/views/components/dashboard-layout.blade.php` | Navbar, logo Laravel, sidebar, pencarian, profil/logout, dan menu berdasarkan izin |
+| `resources/views/dashboard.blade.php` | Kartu aksi, kalender, filter, legenda, dan rincian tanggal |
+| `resources/css/dashboard.css` | Tampilan navy/teal, sidebar ponsel, kalender besar yang dapat digeser pada layar kecil |
+| `app/Services/RoomCalendar.php` | Query booking disetujui, perhitungan kepadatan dan jadwal harian |
+| `app/Http/Controllers/DashboardController.php` | Validasi filter, kalender, dan ringkasan booking pribadi |
+| `RoomController::index` / `BookingController::index` | Daftar ruang yang dapat dicari dan riwayat milik sendiri |
+| `app/Http/Controllers/Admin/RoomMasterController.php` | Pembacaan master data kelas khusus admin |
+| `tests/Feature/DashboardTest.php` | Filter bulan/tahun, ambang warna, booking lintas hari, data kosong, pencarian, kepemilikan, dan hak akses admin |
+
+**Batas tahap ini:** kartu Booking ruang membuka katalog dan jam pemakaian. Form pengajuan/penyimpanan booking adalah kelanjutan modul A3; halaman master saat ini menyediakan daftar data, sedangkan CRUD kelas diteruskan pada modul A2. Tidak ada tombol simpan atau hapus yang diarahkan ke controller kosong.
+
+Tidak ada paket atau migration baru untuk dashboard. Pastikan migration fitur sebelumnya sudah selesai, lalu jalankan sendiri:
+
+```powershell
+php artisan config:clear
+php artisan migrate:status
+```
+
+Untuk melihat tampilan, jalankan `php artisan serve` dan `npm.cmd run dev` di dua terminal terpisah, lalu login dan buka `/dashboard`. Alternatif aset statis: `npm.cmd run build`. Semua perintah aplikasi, build, dan feature test pada bagian ini belum dijalankan oleh Codex.
+
+```powershell
+php artisan test --filter=DashboardTest
+```
+
+Untuk mencoba admin secara manual pada lingkungan lokal, gunakan akun yang sudah terdaftar. Jalankan `php artisan tinker`, kemudian ganti email contoh berikut dengan akun uji Anda:
+
+```php
+$user = App\Models\User::where('email', 'email-admin-anda@contoh.ac.id')->firstOrFail();
+$user->role = 'admin';
+$user->save();
+```
+
+Registrasi publik tetap menghasilkan `peminjam`. Setelah itu buka dashboard memakai dua akun uji berbeda dan buktikan hasilnya:
+
+- [ ] A1DB01 — Dashboard terbuka setelah login; navbar pencarian dan ketiga kartu menuju halaman/kalender yang sesuai.
+- [ ] A1DB02 — Bulan awal sesuai tanggal aplikasi; filter bulan/tahun, sebelumnya/berikutnya, Hari ini, dan tanggal terpilih bekerja.
+- [ ] A1DB03 — Warna sesuai data booking disetujui; data kosong tampil netral; rincian waktu tidak menganggap seluruh hari penuh.
+- [ ] A1DB04 — Riwayat hanya menampilkan booking milik akun yang login; filter pencarian ruangan dan pagination bekerja.
+- [ ] A1DB05 — Peminjam tidak melihat menu master dan mendapat 403 pada `/admin/rooms`; admin melihat menu dan daftar aktif/nonaktif.
+- [ ] A1DB06 — Sidebar dapat dibuka/ditutup pada ponsel; kalender dapat digeser; tombol profil dan logout bekerja.
+- [ ] A1DB07 — DashboardTest lolos; isi tanggal, commit dan hasil aktual sebagai bukti.
+
+| Pemeriksaan | Hasil aktual | Tanggal/pelaksana |
+| --- | --- | --- |
+| Sintaks PHP/CSS | Lolos `php -l`, parsing PostCSS, dan `git diff --check`; belum membuktikan perilaku aplikasi | 26 Oktober 2026 / Codex |
+| Feature test dashboard dan akses | Belum dijalankan | — |
+| Build aset dan tampilan browser | Belum dijalankan | — |
 
 ## A1 — Halaman login dan registrasi
 

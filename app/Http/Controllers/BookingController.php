@@ -4,15 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class BookingController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request): View
     {
-        //
+        $bookings = DB::table('bookings')->join('rooms', 'rooms.id', '=', 'bookings.room_id')
+            ->where('bookings.user_id', $request->user()->id)
+            ->orderByDesc('bookings.starts_at')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.code as room_code')
+            ->paginate(10)->withQueryString();
+
+        return view('bookings.index', compact('bookings'));
     }
 
     /**
