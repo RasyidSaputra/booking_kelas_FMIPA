@@ -148,12 +148,12 @@ Jangan jalankan `breeze:install` ulang setelah fitur dimodifikasi tanpa meninjau
 
 ## P2 — Database dan penyimpanan
 
-- [ ] SET09 — Pilih **satu** konfigurasi database pengembangan. Rekomendasi integrasi: MySQL; SQLite tetap bisa untuk mulai belajar.
+- [x] SET09 — Konfigurasi database pengembangan integrasi: MySQL; 
 
 **Pilihan A: MySQL/MariaDB Laragon.** Nyalakan layanan database, lalu jalankan SQL berikut di HeidiSQL/phpMyAdmin atau klien SQL untuk membuat database lokal jika belum ada:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS booking_kelas_fmipa
+CREATE DATABASE IF NOT EXISTS kelasku
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
@@ -163,24 +163,16 @@ Edit `.env` dengan kredensial lokal; contoh berikut bukan jaminan password serve
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=booking_kelas_fmipa
+DB_DATABASE=kelasku
 DB_USERNAME=root
 DB_PASSWORD=
 ```
 
 Gunakan tabel InnoDB untuk rancangan transaksi/penguncian persetujuan. SQLite test bawaan tidak membuktikan perilaku penguncian MySQL; uji dua persetujuan bersamaan pada database MySQL uji terpisah saat mengerjakan PJ05.
 
-**Pilihan B: SQLite.** Pertahankan `DB_CONNECTION=sqlite`. Hapus atau sesuaikan `DB_DATABASE` MySQL jika berpindah ke SQLite, lalu buat file hanya jika belum ada:
+File kosong `database/database.mysql` yang disebut README lama bukan cara membuat database MySQL dan tidak diperlukan.  untuk MySQL, gunakan SQL pembuatan database di atas.
 
-```powershell
-if (-not (Test-Path -LiteralPath 'database/database.sqlite')) {
-    New-Item -ItemType File -Path 'database/database.sqlite'
-}
-```
-
-File kosong `database/database.mysql` yang disebut README lama bukan cara membuat database MySQL dan tidak diperlukan. Untuk SQLite, file yang benar adalah `database/database.sqlite`; untuk MySQL, gunakan SQL pembuatan database di atas.
-
-- [ ] SET10 — Terapkan konfigurasi dan migration bawaan setelah koneksi siap.
+- [x] SET10 — Terapkan konfigurasi dan migration bawaan setelah koneksi siap.
 
 ```powershell
 php artisan config:clear
@@ -190,7 +182,7 @@ php artisan migrate:status
 
 Migration saat ini baru menyiapkan tabel bawaan. Migration fitur dijalankan lagi setelah P3 selesai diisi. Tabel sessions/cache/jobs sudah disediakan, sehingga tidak perlu menjalankan generator tabel tersebut lagi. Jangan memakai `migrate:fresh` pada database yang berisi pekerjaan/data yang ingin dipertahankan.
 
-- [ ] SET11 — Siapkan akses foto publik.
+- [x] SET11 — Siapkan akses foto publik.
 
 ```powershell
 php artisan storage:link
@@ -202,7 +194,7 @@ Saat implementasi, simpan foto melalui disk `public` secara eksplisit, misalnya 
 
 Perintah berikut **opsional sampai tim mulai modul terkait**. Jalankan sekali untuk file yang belum ada; generator hanya membentuk kerangka, belum mengimplementasikan fitur. Sepakati nama kolom dan relasi sebelum migration dijalankan. `User`, `UserFactory`, dan `DatabaseSeeder` sudah ada, sehingga cukup diedit.
 
-- [ ] SET12 — A2 membuat model, migration, factory ruangan/fasilitas dan pivot.
+- [x] SET12 — A2 membuat model, migration, factory ruangan/fasilitas dan pivot.
 
 ```powershell
 php artisan make:model Room -mf
@@ -220,7 +212,7 @@ php artisan make:seeder FacilitySeeder
 php artisan make:seeder RoomSeeder
 ```
 
-- [ ] SET13 — A1 menyiapkan tambahan profil/role dan pembatasan admin.
+- [x] SET13 — A1 menyiapkan tambahan profil/role dan pembatasan admin.
 
 ```powershell
 php artisan make:migration add_identity_and_role_to_users_table --table=users
