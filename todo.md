@@ -4,6 +4,8 @@ Dokumen ini berisi urutan persiapan yang dijalankan sendiri oleh anggota tim, la
 
 ## Navigasi
 
+- [A1 — Halaman login dan registrasi](#a1--halaman-login-dan-registrasi)
+- [Perbaikan migration tabel](#perbaikan-migration-tabel)
 - [Kondisi awal proyek](#kondisi-awal-proyek)
 - [Keputusan paket dan stack](#keputusan-paket-dan-stack)
 - [P0 — Persiapan lingkungan](#p0--persiapan-lingkungan)
@@ -13,6 +15,132 @@ Dokumen ini berisi urutan persiapan yang dijalankan sendiri oleh anggota tim, la
 - [P4 — Pemeriksaan dan cara menjalankan](#p4--pemeriksaan-dan-cara-menjalankan)
 - [P5 — Urutan kerja dan bukti eksekusi](#p5--urutan-kerja-dan-bukti-eksekusi)
 - [Checklist penerapan materi](#checklist-penerapan-materi-laravel)
+
+## A1 — Halaman login dan registrasi
+
+Pemilik: **Anda (A1)**. Kode awal disiapkan pada **26 Oktober 2026**, mengikuti referensi dashboard: latar abu muda, panel putih, warna navy/teal, dan sudut membulat. Status ini menunjukkan kode tersedia; build, test, dan pemeriksaan browser belum dijalankan oleh Codex.
+
+| Bagian | File | Perilaku yang disiapkan |
+| --- | --- | --- |
+| Layout auth | `resources/views/components/auth-layout.blade.php` | Identitas Ruang FMIPA, navigasi masuk/daftar, ilustrasi denah, layout responsif |
+| Field form | `resources/views/components/auth-field.blade.php` | Label, old input selain password, error per field, tombol tampil/sembunyikan kata sandi |
+| Login | `resources/views/auth/login.blade.php` | Email, kata sandi, ingat saya, lupa kata sandi, tautan daftar |
+| Registrasi | `resources/views/auth/register.blade.php` | Nama, NIM/NIP, email, kata sandi dan konfirmasi |
+| Tampilan | `resources/css/auth.css`, diimpor oleh `resources/css/app.css` | Gaya auth dengan class khusus; tidak memerlukan paket baru |
+| Validasi registrasi | `app/Http/Requests/Auth/RegisterRequest.php` | NIM/NIP wajib/unik, email unik, konfirmasi password, pesan form dalam bahasa Indonesia |
+| Penyimpanan akun | `app/Http/Controllers/Auth/RegisteredUserController.php`, `app/Models/User.php` | Menyimpan input tervalidasi dan hash password; role ditetapkan server menjadi `peminjam` |
+| Pesan login | `app/Http/Requests/Auth/LoginRequest.php`, `lang/id/auth.php` | Pesan input, kredensial salah, dan batas percobaan login |
+| Pengujian | `tests/Feature/Auth/RegistrationTest.php` | Registrasi valid, hash password, role peminjam meski request mengirim admin, NIM/NIP wajib/unik, konfirmasi tidak cocok |
+
+**Sebelum mencoba:** pastikan migration `2026_10_26_105135_ensure_identity_and_role_on_users_table` sudah berstatus `Ran`, karena form registrasi kini menyimpan `identity_number` dan `role`. Jika masih `Pending`, ikuti bagian perbaikan migration di bawah, lalu jalankan `php artisan migrate` ketika kondisi database sudah sesuai.
+
+Untuk menjalankan secara lokal dari PowerShell:
+
+```powershell
+php artisan config:clear
+php artisan migrate:status
+```
+
+Terminal pertama:
+
+```powershell
+php artisan serve
+```
+
+Terminal kedua:
+
+```powershell
+npm.cmd run dev
+```
+
+Buka `http://localhost:8000/login` dan `http://localhost:8000/register`. Jika memakai Laragon, gunakan domain lokal proyek dengan path yang sama. Alternatif aset statis: jalankan `npm.cmd run build`, lalu cukup jalankan server Laravel. Tidak diperlukan instalasi Breeze ulang atau paket tambahan.
+
+Pengujian autentikasi yang dapat Anda jalankan sendiri; `phpunit.xml` memakai SQLite `:memory:` dan membutuhkan `pdo_sqlite`:
+
+```powershell
+php artisan test --filter='AuthenticationTest|RegistrationTest'
+```
+
+- [ ] A1UI01 — Login dan registrasi terbuka dengan style baru; navigasi antarhalaman bekerja.
+- [ ] A1UI02 — Tampilan tidak melebar keluar layar pada ponsel; label, fokus keyboard, dan tombol tampil/sembunyikan kata sandi berfungsi.
+- [ ] A1UI03 — Registrasi valid menyimpan NIM/NIP (termasuk angka nol di depan), login otomatis, dan menuju dashboard.
+- [ ] A1UI04 — Email/NIM/NIP duplikat dan konfirmasi password yang salah ditolak dengan pesan per field; nilai password tidak ditampilkan kembali.
+- [ ] A1UI05 — Login salah menampilkan pesan; login benar, ingat saya, dan logout tetap bekerja.
+- [ ] A1UI06 — Seluruh skenario AuthenticationTest dan RegistrationTest lolos; simpan hasil aktual/commit sebagai bukti.
+
+| Pemeriksaan | Hasil aktual | Tanggal/pelaksana |
+| --- | --- | --- |
+| Sintaks PHP pada controller/request/model/test/terjemahan | Lolos pemeriksaan `php -l` oleh Codex; ini belum membuktikan perilaku aplikasi | 26 Oktober 2026 / Codex |
+| Sintaks CSS | Lolos parsing PostCSS; ini belum membuktikan hasil build atau tampilan browser | 26 Oktober 2026 / Codex |
+| Build aset dan render Blade/browser | Belum dijalankan | — |
+| Feature test autentikasi | Belum dijalankan | — |
+| Uji alur login/registrasi pada desktop dan ponsel | Belum dijalankan | — |
+
+Langkah A1 berikutnya: implementasi `EnsureUserIsAdmin`, perlindungan route admin, akun contoh di `UserSeeder`, serta pembaruan NIM/NIP pada profil. Halaman lupa/reset password masih menggunakan tampilan bawaan Breeze.
+
+## Perbaikan migration tabel
+
+Perbaikan kode pada **26 Oktober 2026**, berdasarkan log `Table 'rooms' already exists`. Perintah di bagian ini belum dijalankan oleh Codex.
+
+Penyebab: migration awal sudah membuat tabel minimal `rooms`, `facilities`, `faciity_room` (salah ketik), dan `bookings`. File baru mencoba membuat ulang tabel yang sama. Mengedit migration yang sudah berstatus `Ran` juga tidak membuat Laravel menjalankannya lagi.
+
+Perubahan yang disiapkan:
+
+| File migration | Tindakan |
+| --- | --- |
+| `2026_10_26_101808_create_rooms_table.php` dan `2026_10_26_101829_create_facilities_table.php` | Dipertahankan sebagai pembuat tabel awal |
+| `2026_10_26_101932_create_faciity_room_table.php` | Nama lama dipertahankan agar cocok dengan riwayat; koreksi dilakukan migration berikutnya |
+| `2026_10_26_102203_add_identity_and_role_to_users_table.php` | Tetap menjadi placeholder riwayat; isi penambahan kolom dipindahkan ke migration baru agar database yang sudah mencatat versi kosong tetap diperbarui |
+| `2026_10_26_102346_create_bookings_table.php` | Dikembalikan sesuai kerangka asli yang sebelumnya terhapus |
+| `2026_10_26_105131_add_details_to_rooms_table.php` | Menambah kolom ruangan pada tabel yang sudah ada |
+| `2026_10_26_105132_add_name_to_facilities_table.php` | Menambah nama fasilitas |
+| `2026_10_26_105133_fix_facility_room_table.php` | Mengubah nama `faciity_room` menjadi `facility_room`, lalu menambah foreign key dan unique pasangan |
+| `2026_10_26_105134_add_details_to_bookings_table.php` | Menambah data pengajuan, status, pemeriksa, foreign key, dan index jadwal |
+| `2026_10_26_105135_ensure_identity_and_role_on_users_table.php` | Menambah identitas/role jika belum ada; identitas nullable/unik, role default peminjam |
+
+File `105131`–`105134` yang sebelumnya bernama `create_*` diganti namanya karena sekarang mengubah tabel lama. Berdasarkan log, eksekusi berhenti pada pembuatan ulang `rooms`; belum ada verifikasi langsung terhadap tabel `migrations` di database Anda.
+
+- [ ] MIG01 — Tinjau status migration dan kolom tabel sebelum menjalankan perubahan.
+
+```powershell
+php artisan migrate:status
+```
+
+Sintaks yang benar adalah `migrate:status`, bukan `migrate status`. Pada database yang mengalami error tersebut, migration awal diharapkan `Ran` dan migration `105131`–`105135` berstatus `Pending`. Jika versi lama `105131_create_rooms_table` atau file `create_*` baru lainnya justru sudah `Ran`, jangan lanjutkan sebelum riwayat dan skemanya diperiksa.
+
+SQL berikut dapat dijalankan di klien MySQL pada database aplikasi untuk pemeriksaan tanpa mengubah data:
+
+```sql
+SHOW COLUMNS FROM rooms;
+SHOW COLUMNS FROM facilities;
+SHOW COLUMNS FROM faciity_room;
+SHOW COLUMNS FROM bookings;
+SHOW COLUMNS FROM users;
+SELECT 'rooms' AS table_name, COUNT(*) AS total FROM rooms
+UNION ALL SELECT 'facilities', COUNT(*) FROM facilities
+UNION ALL SELECT 'faciity_room', COUNT(*) FROM faciity_room
+UNION ALL SELECT 'bookings', COUNT(*) FROM bookings;
+```
+
+Empat tabel fitur awal diharapkan hanya memiliki `id`, `created_at`, `updated_at` dan belum berisi data. Migration penambahan kolom ruangan memeriksa keempat tabel tersebut terlebih dahulu dan berhenti jika ada data: kolom wajib seperti kode ruangan, pemilik pengajuan, serta tanggal tidak boleh diisi dengan tebakan. Jika sudah berisi data, diperlukan backfill bertahap sesuai data sebenarnya. Akun pada `users` tetap dapat dipertahankan.
+
+- [ ] MIG02 — Setelah kondisi awal sesuai, jalankan migration biasa. Tidak perlu `migrate:fresh` atau menghapus tabel.
+
+```powershell
+php artisan migrate
+php artisan migrate:status
+```
+
+- [ ] MIG03 — Periksa `facility_room` sudah memakai ejaan benar; kolom, foreign key, nilai default, dan index baru tersedia. Catat hasil aktual pada tabel berikut.
+
+| Pemeriksaan | Hasil aktual | Tanggal/pelaksana |
+| --- | --- | --- |
+| Status migration sebelum perbaikan | Belum dijalankan | — |
+| Skema awal dan jumlah data tabel fitur | Belum dijalankan | — |
+| `php artisan migrate` | Belum dijalankan | — |
+| Status akhir dan skema hasil | Belum dijalankan | — |
+
+Setiap migration perubahan memiliki `down()` untuk membalik perubahan kolom/relasi; rollback menghapus data pada kolom yang diturunkan. Gunakan rollback hanya pada database uji yang aman. Rangkaian ini memperbaiki struktur tabel, belum mengimplementasikan relasi model, validasi jadwal, atau policy fitur.
 
 ## Kondisi awal proyek
 
@@ -260,7 +388,7 @@ php artisan db:seed
 
 ## P4 — Pemeriksaan dan cara menjalankan
 
-- [ ] SET16 — Setelah Breeze terpasang, periksa route, test yang tersedia, dan hasil build.
+- [x] SET16 — Setelah Breeze terpasang, periksa route, test yang tersedia, dan hasil build.
 
 ```powershell
 php artisan route:list
@@ -270,7 +398,7 @@ npm.cmd run build
 
 Periksa adanya route login, register, logout, profil, dan dashboard; periksa tidak ada tabrakan nama route. `composer test` memakai konfigurasi `phpunit.xml` yang sudah menargetkan SQLite `:memory:`. Jangan menimpa konfigurasi test dengan database pengembangan.
 
-- [ ] SET17 — Jalankan aplikasi melalui dua terminal PowerShell.
+- [x] SET17 — Jalankan aplikasi melalui dua terminal PowerShell.
 
 Terminal 1:
 
@@ -286,7 +414,7 @@ npm.cmd run dev
 
 Buka `http://localhost:8000`. Alternatif satu terminal: `composer run dev` yang sudah tersedia menjalankan server, queue listener, dan Vite. Jika memakai virtual host Laragon, arahkan document root ke `public` dan sesuaikan `APP_URL`. Hentikan proses pengembangan dengan Ctrl+C.
 
-- [ ] SET18 — Coba registrasi → login → dashboard → edit profil → logout; guest harus diarahkan ke login saat mengakses dashboard. Reset password memakai `MAIL_MAILER=log` untuk pengembangan lokal; jangan melampirkan tautan/token reset ke dokumentasi publik. Alur admin/peminjam baru bisa dibuktikan setelah role/policy dibuat.
+- [x] SET18 — Coba registrasi → login → dashboard → edit profil → logout; guest harus diarahkan ke login saat mengakses dashboard. Reset password memakai `MAIL_MAILER=log` untuk pengembangan lokal; jangan melampirkan tautan/token reset ke dokumentasi publik. Alur admin/peminjam baru bisa dibuktikan setelah role/policy dibuat.
 
 Saat mulai pengujian fitur, generator berikut menyiapkan file test; lengkapi skenario sesuai TS01–TS08, bukan hanya test response bawaan:
 
@@ -338,7 +466,7 @@ Dasar checklist: 9 PDF materi dan latihan yang diberikan dosen.
 
 | Kode | Anggota | Modul |
 | --- | --- | --- |
-| A1 | Nama: … | Autentikasi, profil, hak akses, layout bersama |
+| A1 | Anda (nama: …) | Autentikasi, profil, hak akses, layout bersama |
 | A2 | Nama: … | Ruangan, fasilitas, pencarian |
 | A3 | Nama: … | Pengajuan dan riwayat peminjaman |
 | A4 | Nama: … | Persetujuan, jadwal, dashboard, laporan |

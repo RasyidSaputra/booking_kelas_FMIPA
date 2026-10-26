@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            // Migration awal dipertahankan sesuai riwayatnya.
+            // Kolom ditambahkan melalui migration 2026_10_26_105135.
         });
     }
 

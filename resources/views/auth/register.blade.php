@@ -1,52 +1,29 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
+<x-auth-layout page="register">
+    <div class="auth-form-heading">
+        <span class="auth-form-kicker">MULAI RENCANA ANDA</span>
+        <h2 id="auth-form-title">Satu akun, banyak ruang.</h2>
+        <p>Daftarkan diri untuk mengajukan peminjaman ruangan.</p>
+    </div>
+
+    <form method="POST" action="{{ route('register') }}" class="auth-form auth-register-form" x-data="{ submitting: false }" x-on:submit="submitting = true">
         @csrf
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        <x-auth-field name="name" label="Nama lengkap" placeholder="Nama sesuai identitas Anda" required autofocus autocomplete="name" maxlength="255" />
+        <x-auth-field name="identity_number" label="NIM / NIP" placeholder="Masukkan NIM atau NIP Anda" required maxlength="30" autocapitalize="off" spellcheck="false" />
+        <x-auth-field name="email" label="Alamat email" type="email" placeholder="nama@contoh.ac.id" required autocomplete="username" maxlength="255" />
+
+        <div class="auth-password-grid">
+            <x-auth-field name="password" label="Kata sandi" type="password" placeholder="Minimal 8 karakter" hint="Gunakan minimal 8 karakter." required minlength="8" autocomplete="new-password" />
+            <x-auth-field name="password_confirmation" label="Konfirmasi kata sandi" type="password" placeholder="Ulangi kata sandi" required minlength="8" autocomplete="new-password" />
         </div>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+        <p class="auth-registration-note"><span aria-hidden="true">ⓘ</span> Akun baru terdaftar sebagai peminjam ruangan.</p>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
+        <button class="auth-submit" type="submit" x-bind:disabled="submitting">
+            <span x-text="submitting ? 'Membuat akun…' : 'Buat akun'">Buat akun</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
     </form>
-</x-guest-layout>
+
+    <p class="auth-switch">Sudah memiliki akun? <a class="auth-link" href="{{ route('login') }}">Masuk di sini <span aria-hidden="true">↗</span></a></p>
+</x-auth-layout>
