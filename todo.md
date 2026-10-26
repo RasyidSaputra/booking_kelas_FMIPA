@@ -1,9 +1,10 @@
 # Persiapan dan TODO Laravel — Peminjaman Ruangan FMIPA UNRI
 
-Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah contoh belum otomatis dianggap berhasil. Pekerjaan yang sudah dijalankan dicatat pada **Hasil uji alur A1**, **Perbaikan password admin**, **Penyesuaian role pengguna**, dan **Log eksekusi migration** di bawah. Feature test A1 sudah dijalankan; build dan pemeriksaan visual browser belum dijalankan oleh Codex.
+Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah contoh belum otomatis dianggap berhasil. Status terbaru tersedia pada **Pusat master data admin**; pengujian PHP/JavaScript dan build aset sudah berhasil dijalankan. Log tahap sebelumnya tetap disimpan sebagai dokumentasi. Pemeriksaan visual browser dan uji konkurensi MySQL langsung belum dijalankan.
 
 ## Navigasi
 
+- [Pusat master data admin](#pusat-master-data-admin)
 - [Hasil uji alur A1](#hasil-uji-alur-a1)
 - [Perbaikan password admin](#perbaikan-password-admin)
 - [Penyesuaian role pengguna](#penyesuaian-role-pengguna)
@@ -21,6 +22,76 @@ Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah con
 - [P4 — Pemeriksaan dan cara menjalankan](#p4--pemeriksaan-dan-cara-menjalankan)
 - [P5 — Urutan kerja dan bukti eksekusi](#p5--urutan-kerja-dan-bukti-eksekusi)
 - [Checklist penerapan materi](#checklist-penerapan-materi-laravel)
+
+## Pusat master data admin
+
+**26 Oktober 2026 — implementasi dan pengujian oleh Codex.** Buka **Master data kelas** atau `/admin/rooms` setelah login sebagai admin. Seluruh pengelolaan berada di satu halaman dengan tab dan satu dialog form/konfirmasi yang dipakai ulang. Tidak ada paket, tabel, atau migration baru yang diperlukan.
+
+| Tab | Fitur |
+| --- | --- |
+| Ruangan | Tambah/edit kode, nama, kapasitas, lokasi, informasi, foto, fasilitas, dan status aktif; hapus hanya jika belum punya riwayat |
+| Fasilitas | Tambah/edit nama fasilitas; hapus hanya jika tidak digunakan ruangan |
+| Pengajuan | Filter status/pencarian, lihat kegiatan/pemohon/waktu, setujui atau tolak melalui dialog; penolakan wajib beralasan |
+| Jadwal | Pilih tanggal, buat jadwal langsung disetujui atas nama pengguna, edit jadwal disetujui, batalkan tanpa menghapus riwayat |
+| Pengguna | Tambah/edit nama, NIM/NIP, email, role admin/dosen/mahasiswa, serta password; hapus akun tanpa riwayat |
+
+**Alur modal:** klik tambah/edit/konfirmasi → isi/periksa data → simpan. Request memakai `fetch`, FormData, token CSRF, dan method spoofing Laravel untuk PATCH/DELETE. Setelah berhasil, halaman otomatis di-reload dan pesan sukses muncul dari session. Saat validasi 422, modal tetap terbuka, isian dipertahankan, dan error ditampilkan. Submit kedua diabaikan selama request pertama berjalan. Tombol batal/Escape menutup dialog saat tidak sedang menyimpan.
+
+Aturan yang diterapkan:
+
+- Seluruh endpoint `/admin/*` berada di middleware `auth`, `verified`, dan `can:view-room-master`. Form Request juga memeriksa izin admin. Mahasiswa/dosen mendapat 403, termasuk pada request langsung untuk tambah/edit/hapus.
+- Jadwal manual admin langsung berstatus approved, dan reviewer selalu berasal dari akun admin login. Input status/reviewer dari browser tidak dipercaya.
+- Persetujuan/penolakan hanya untuk pending. Pembatalan/edit jadwal hanya untuk approved. Aksi terhadap status yang sudah berubah ditolak tanpa menimpa hasil sebelumnya.
+- Pemeriksaan bentrok memakai `starts_at < selesai_baru` dan `ends_at > mulai_baru`. Jadwal berdampingan diperbolehkan. Booking menunggu tidak mengunci ketersediaan.
+- Pembuatan/edit/persetujuan memakai transaksi dan lock baris ruangan; pengecekan bentrok menggunakan current/locking read agar tidak memakai snapshot lama MySQL setelah menunggu lock. Edit pindah ruangan mengunci ruang asal/tujuan dalam urutan ID.
+- Ruang harus aktif, waktu selesai setelah mulai, dan peserta tidak melebihi kapasitas. Waktu dengan timezone eksplisit dinormalisasi ke timezone aplikasi. Kapasitas ruang tidak boleh dikurangi di bawah peserta jadwal approved yang belum selesai.
+- Menonaktifkan ruangan mempertahankan riwayat. Foto JPG/PNG/WebP maksimal 2 MB disimpan pada disk public, tampil di master/katalog ruang; foto lama dibersihkan saat diganti/dihapus. Upload baru dibersihkan jika transaksi gagal.
+- Password pengguna baru wajib dikonfirmasi dan di-hash. Password kosong pada edit berarti mempertahankan password lama. Password/hash tidak disertakan dalam data tabel atau payload edit.
+- Admin tidak dapat menghapus atau mengubah role akun yang sedang dipakai. Admin terakhir tetap dilindungi. Pengguna yang pernah menjadi peminjam/pemeriksa tidak dapat dihapus.
+
+Form pengajuan mahasiswa/dosen belum dibuat pada tahap ini; tab Pengajuan mengelola record pending yang tersedia. Pengajuan baru melalui alur pengguna diteruskan pada modul A3. Kalender dashboard langsung membaca jadwal approved yang dibuat atau disetujui admin.
+
+| File | Peran |
+| --- | --- |
+| `resources/views/admin/rooms/index.blade.php` | Ringkasan, tab, pencarian/filter, tabel, dan tombol aksi |
+| `resources/views/admin/rooms/partials/modal.blade.php` | Satu dialog bersama untuk form dan konfirmasi |
+| `resources/views/components/admin-field.blade.php` | Field form dengan binding/error aksesibel |
+| `resources/js/admin-master.js` | State modal, endpoint/method, validasi, submit dan reload otomatis |
+| `resources/css/admin-master.css` | Tampilan pusat master dan modal responsif |
+| `app/Http/Controllers/Admin/` | Query pusat master dan endpoint ruangan/fasilitas/pengguna/jadwal/persetujuan |
+| `app/Http/Requests/Admin/`, `ReviewBookingRequest` | Izin admin dan validasi tiap jenis form |
+| `app/Services/BookingManagement.php` | Aturan jadwal, transaksi, lock, persetujuan dan pembatalan |
+| `tests/Feature/AdminMasterTest.php` | 25 kasus pengelolaan, validasi, hak akses, upload dan aturan bisnis |
+| `tests/Frontend/admin-master.test.mjs` | 6 kasus state/submit/error/reload modal |
+
+Perintah yang benar-benar dijalankan pada hasil akhir:
+
+```powershell
+php artisan test --compact --stop-on-failure --filter='AdminMasterTest|A1FlowTest|AuthenticationTest|RegistrationTest|DashboardTest|ProfileTest|PasswordUpdateTest|UserRoleMigrationTest'
+node --test tests/Frontend/admin-master.test.mjs
+npm.cmd run build
+```
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| Feature test master + regresi A1 | **75 passed, 456 assertions**, durasi 2,31 detik, memakai SQLite :memory: |
+| JavaScript modal | **6 passed**, tidak ada gagal |
+| Build Vite | Berhasil; CSS/JS dan manifest terbentuk pada public/build |
+| Blade master/modal/field | Lolos kompilasi dan pemeriksaan sintaks |
+| Foto publik | Link public/storage sudah tersedia; pengujian upload memakai Storage::fake, bukan foto utama |
+
+Tidak mengubah data admin, ruangan, atau booking pada database utama untuk menjalankan pengujian. Uji fitur PHP memverifikasi HTTP/validasi/database; uji JavaScript memakai respons server tiruan. Belum ada pengujian browser langsung untuk tampilan/fokus dialog, maupun uji dua proses MySQL simultan. Mekanisme lock telah diimplementasikan, tetapi hasil test SQLite bukan bukti konkurensi MySQL.
+
+- [x] ADM01 — Tambah/edit ruangan, fasilitas dan foto tervalidasi; data berelasi disimpan dalam transaksi.
+- [x] ADM02 — Jadwal manual, edit/pindah ruangan dan pembatalan mengikuti pemeriksaan bentrok/kapasitas/status.
+- [x] ADM03 — Persetujuan/penolakan pending merekam admin, waktu keputusan dan alasan penolakan.
+- [x] ADM04 — CRUD pengguna memakai password hash, mempertahankan password saat kosong, melindungi admin/riwayat.
+- [x] ADM05 — Endpoint mutasi menolak mahasiswa/dosen; data password tidak tampil pada payload master.
+- [x] ADM06 — Logika modal mempertahankan isian ketika gagal dan reload setelah berhasil; test JavaScript lulus.
+- [ ] ADM07 — Uji manual di browser: tab, tambah/edit, konfirmasi, upload, Escape/fokus dan tampilan ponsel.
+- [ ] ADM08 — Uji dua persetujuan bersamaan di database MySQL uji yang terpisah.
+
+Untuk mencoba, jalankan aplikasi seperti biasa lalu buka `/admin/rooms`. Aset sudah dibangun; jika sedang memakai Vite dev server, perubahan modul/CSS dapat dimuat lewat `npm.cmd run dev`. Link `public/storage` yang sudah ada dipakai untuk menampilkan foto.
 
 ## Hasil uji alur A1
 
@@ -257,7 +328,7 @@ Ini adalah indikator kepadatan berdasarkan **jumlah ruang**, bukan persentase ja
 | `app/Http/Controllers/Admin/RoomMasterController.php` | Pembacaan master data kelas khusus admin |
 | `tests/Feature/DashboardTest.php` | Filter bulan/tahun, ambang warna, booking lintas hari, data kosong, pencarian, kepemilikan, dan hak akses admin |
 
-**Batas tahap ini:** kartu Booking ruang membuka katalog dan jam pemakaian. Form pengajuan/penyimpanan booking adalah kelanjutan modul A3; halaman master saat ini menyediakan daftar data, sedangkan CRUD kelas diteruskan pada modul A2. Tidak ada tombol simpan atau hapus yang diarahkan ke controller kosong.
+**Perkembangan terbaru:** kartu Booking ruang membuka katalog dan jam pemakaian. Form pengajuan/penyimpanan booking pengguna adalah kelanjutan modul A3. Master kini menyediakan CRUD ruangan/fasilitas/pengguna, jadwal dan persetujuan melalui modal; lihat bagian Pusat master data admin untuk implementasi dan hasil pengujiannya.
 
 Tidak ada paket atau migration baru untuk dashboard. Pastikan migration fitur sebelumnya sudah selesai, lalu jalankan sendiri:
 

@@ -2,28 +2,21 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\Admin\MasterRequest;
+use Illuminate\Validation\Rule;
 
-class ReviewBookingRequest extends FormRequest
+class ReviewBookingRequest extends MasterRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return false;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, array>
      */
     public function rules(): array
     {
         return [
-            //
+            'decision' => ['required', Rule::in(['approved', 'rejected'])],
+            'rejection_reason' => ['required_if:decision,rejected', 'nullable', 'string', 'max:2000'],
         ];
     }
 }
