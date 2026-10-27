@@ -20,7 +20,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
+    Route::get('/rooms/{room}', [RoomController::class, 'show'])->whereNumber('room')->name('rooms.show');
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
     Route::prefix('admin')->name('admin.')->middleware('can:view-room-master')->group(function () {
         Route::get('/rooms', RoomMasterController::class)->name('rooms.index');
         Route::post('/rooms', [RoomManagementController::class, 'store'])->name('rooms.store');

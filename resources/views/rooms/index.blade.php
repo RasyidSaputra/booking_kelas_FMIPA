@@ -11,7 +11,26 @@
     <div class="dash-list-heading"><h2>{{ $rooms->total() }} ruang ditemukan</h2><p>Jadwal disetujui · {{ $date->translatedFormat('d F Y') }}</p></div>
     <div class="dash-room-grid">
         @forelse ($rooms as $room)
-            <article class="dash-room-card">@if($room->photo_path)<img class="dash-room-photo" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($room->photo_path) }}" alt="{{ $room->name }}" loading="lazy">@endif<div class="dash-room-card-top"><span class="dash-room-code">{{ $room->code }}</span><span class="dash-room-capacity"><x-dashboard-icon name="users" />{{ $room->capacity }} kursi</span></div><h3>{{ $room->name }}</h3><p class="dash-room-location"><x-dashboard-icon name="pin" />{{ $room->location }}</p>@if($room->description)<p class="dash-room-description">{{ $room->description }}</p>@endif<x-room-slots :bookings="$schedule->get($room->id, collect())" :date="$date" /></article>
+            <article class="dash-room-card">
+                @if($room->photo_path)
+                    <img class="dash-room-photo" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($room->photo_path) }}" alt="{{ $room->name }}" loading="lazy">
+                @endif
+                <div class="dash-room-card-top">
+                    <span class="dash-room-code">{{ $room->code }}</span>
+                    <span class="dash-room-capacity"><x-dashboard-icon name="users" />{{ $room->capacity }} kursi</span>
+                </div>
+                <h3><a href="{{ route('rooms.show', $room->id) }}" class="hover:underline">{{ $room->name }}</a></h3>
+                <p class="dash-room-location"><x-dashboard-icon name="pin" />{{ $room->location }}</p>
+                @if($room->description)
+                    <p class="dash-room-description">{{ $room->description }}</p>
+                @endif
+                <div class="pt-2">
+                    <a href="{{ route('rooms.show', $room->id) }}" class="inline-flex items-center text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">
+                        Lihat Detail & Denah &rarr;
+                    </a>
+                </div>
+                <x-room-slots :bookings="$schedule->get($room->id, collect())" :date="$date" />
+            </article>
         @empty
             <div class="dash-empty"><x-dashboard-icon name="search" /><h3>{{ $search !== '' ? 'Ruangan tidak ditemukan' : 'Belum ada ruang aktif' }}</h3><p>{{ $search !== '' ? 'Coba nama, kode, atau lokasi lain.' : 'Data ruangan aktif akan tampil di sini setelah tersedia.' }}</p></div>
         @endforelse

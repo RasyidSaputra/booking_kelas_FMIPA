@@ -59,9 +59,35 @@ class RoomController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Room $room)
+    public function show(Room $room): View
     {
-        //
+        $now = now();
+        $currentBooking = DB::table('bookings')
+            ->join('users', 'users.id', '=', 'bookings.user_id')
+            ->where('room_id', $room->id)
+            ->where('status', 'approved')
+            ->where('starts_at', '<=', $now)
+            ->where('ends_at', '>=', $now)
+            ->select('bookings.*', 'users.name as user_name')
+            ->orderBy('ends_at')
+            ->first();
+
+        $todayBookings = DB::table('bookings')
+            ->join('users', 'users.id', '=', 'bookings.user_id')
+            ->where('room_id', $room->id)
+            ->where('status', 'approved')
+            ->whereDate('starts_at', today())
+            ->select('bookings.*', 'users.name as user_name')
+            ->orderBy('starts_at')
+            ->get();
+
+        $facilities = DB::table('facilities')
+            ->join('facility_room', 'facilities.id', '=', 'facility_room.facility_id')
+            ->where('facility_room.room_id', $room->id)
+            ->select('facilities.*')
+            ->get();
+
+        return view('rooms.show', compact('room', 'currentBooking', 'todayBookings', 'facilities'));
     }
 
     /**
