@@ -34,9 +34,62 @@ class BookingController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'booking_date' => ['required', 'date', 'after_or_equal:today'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'purpose' => ['required', 'string', 'max:500'],
+            'participant_count' => ['nullable', 'integer', 'min:1', 'max:200'],
+        ], [
+            'booking_date.after_or_equal' => 'Tanggal peminjaman tidak boleh tanggal yang sudah lewat.',
+            'end_time.after' => 'Waktu selesai harus setelah waktu mulai.',
+            'purpose.required' => 'Tujuan peminjaman wajib diisi.',
+        ]);
+
+        $startsAt = \Carbon\Carbon::parse("{$validated['booking_date']} {$validated['start_time']}");
+        $endsAt = \Carbon\Carbon::parse("{$validated['booking_date']} {$validated['end_time']}");
+
+        // Validasi jika jam mulai sudah lewat pada hari ini
+        if ($startsAt->isPast()) {
+            return back()->withInput()->with('error', 'Waktu mulai peminjaman sudah lewat.');
+        }
+
+        $room = DB::table('rooms')->where('id', $validated['room_id'])->first();
+        if (! $room || ! $room->is_active) {
+            return back()->withInput()->with('error', 'Ruangan ini saat ini tidak aktif.');
+        }
+
+        // Pengecekan bentrok jadwal dengan booking yang berstatus 'approved'
+        $hasConflict = DB::table('bookings')
+            ->where('room_id', $validated['room_id'])
+            ->where('status', 'approved')
+            ->where(function ($query) use ($startsAt, $endsAt): void {
+                $query->where('starts_at', '<', $endsAt->toDateTimeString())
+                    ->where('ends_at', '>', $startsAt->toDateTimeString());
+            })
+            ->exists();
+
+        if ($hasConflict) {
+            return back()->withInput()->with('error', 'Maaf, ruangan sudah dipesan pada jam tersebut.');
+        }
+
+        // Simpan peminjaman baru ke database
+        DB::table('bookings')->insert([
+            'user_id' => $request->user()->id,
+            'room_id' => $validated['room_id'],
+            'purpose' => $validated['purpose'],
+            'participant_count' => $validated['participant_count'] ?? $room->capacity,
+            'starts_at' => $startsAt->toDateTimeString(),
+            'ends_at' => $endsAt->toDateTimeString(),
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('bookings.index')->with('success', 'Pengajuan berhasil dibuat, silakan tunggu persetujuan Admin.');
     }
 
     /**
