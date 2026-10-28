@@ -1,7 +1,7 @@
 <x-dashboard-layout :title="$room->name . ' · Detail Ruangan'">
     <div class="space-y-6" x-data="{
         activePlanTab: 'schematic',
-        bookingModalOpen: {{ ($errors->any() || session('error')) ? 'true' : 'false' }}
+        bookingModalOpen: {{ ($errors->any() || session('error') || request('book') === '1') ? 'true' : 'false' }}
     }">
         {{-- Flash Messages --}}
         @if(session('success'))
@@ -493,7 +493,7 @@
                             <input type="date"
                                 id="booking_date"
                                 name="booking_date"
-                                value="{{ old('booking_date', today()->toDateString()) }}"
+                                value="{{ old('booking_date', request('date', today()->toDateString())) }}"
                                 min="{{ today()->toDateString() }}"
                                 required
                                 class="w-full rounded-lg border-gray-300 text-xs shadow-xs focus:border-emerald-500 focus:ring-emerald-500">

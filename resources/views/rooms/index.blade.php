@@ -170,6 +170,16 @@
 
                     {{-- Daftar Slot Teks --}}
                     <x-room-slots :bookings="$roomBookings" :date="$date" />
+
+                    {{-- Tombol Aksi Cepat: Pinjam Ruangan --}}
+                    <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                        <span class="text-[11px] text-gray-400 font-medium">Bebas bentrok?</span>
+                        <a href="{{ route('rooms.show', $room->id) }}?book=1&date={{ $date->toDateString() }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 transition-colors shadow-2xs">
+                            <x-dashboard-icon name="calendar" class="w-3.5 h-3.5" />
+                            <span>Pinjam Ruangan</span>
+                        </a>
+                    </div>
                 </div>
             </article>
         @empty
