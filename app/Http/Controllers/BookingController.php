@@ -39,13 +39,16 @@ class BookingController extends Controller
         $validated = $request->validate([
             'room_id' => ['required', 'integer', 'exists:rooms,id'],
             'booking_date' => ['required', 'date', 'after_or_equal:today'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'start_time' => ['required', 'date_format:H:i', 'after_or_equal:07:30', 'before:18:00'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time', 'before_or_equal:18:00'],
             'purpose' => ['required', 'string', 'max:500'],
             'participant_count' => ['nullable', 'integer', 'min:1', 'max:200'],
         ], [
             'booking_date.after_or_equal' => 'Tanggal peminjaman tidak boleh tanggal yang sudah lewat.',
+            'start_time.after_or_equal' => 'Jadwal penggunaan ruangan dimulai dari pukul 07:30 WIB.',
+            'start_time.before' => 'Waktu mulai peminjaman harus sebelum pukul 18:00 WIB.',
             'end_time.after' => 'Waktu selesai harus setelah waktu mulai.',
+            'end_time.before_or_equal' => 'Gedung tidak bisa digunakan setelah pukul 18:00 WIB.',
             'purpose.required' => 'Tujuan peminjaman wajib diisi.',
         ]);
 
