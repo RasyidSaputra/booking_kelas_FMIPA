@@ -509,6 +509,8 @@
                                     id="start_time"
                                     name="start_time"
                                     value="{{ old('start_time', '08:00') }}"
+                                    min="07:30"
+                                    max="18:00"
                                     required
                                     class="w-full rounded-lg border-gray-300 text-xs shadow-xs focus:border-emerald-500 focus:ring-emerald-500">
                             </div>
@@ -520,9 +522,15 @@
                                     id="end_time"
                                     name="end_time"
                                     value="{{ old('end_time', '10:00') }}"
+                                    min="07:30"
+                                    max="18:00"
                                     required
                                     class="w-full rounded-lg border-gray-300 text-xs shadow-xs focus:border-emerald-500 focus:ring-emerald-500">
                             </div>
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 text-amber-800 text-[11px] flex items-center gap-2">
+                            <span class="text-sm">⏰</span>
+                            <span>Jam operasional ruangan: <strong>07:30 – 18:00 WIB</strong>. Gedung tidak dapat digunakan setelah pukul 18:00.</span>
                         </div>
 
                         {{-- Jumlah Peserta --}}

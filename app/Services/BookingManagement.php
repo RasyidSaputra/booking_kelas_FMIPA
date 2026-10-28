@@ -91,8 +91,19 @@ class BookingManagement
         if ($data['participant_count'] < 1 || $data['participant_count'] > $room->capacity) {
             $this->invalid('participant_count', 'Jumlah peserta melebihi kapasitas ruangan atau tidak valid.');
         }
-        if (CarbonImmutable::parse($data['ends_at'])->lte(CarbonImmutable::parse($data['starts_at']))) {
+        $startsAt = CarbonImmutable::parse($data['starts_at']);
+        $endsAt = CarbonImmutable::parse($data['ends_at']);
+        if ($endsAt->lte($startsAt)) {
             $this->invalid('ends_at', 'Waktu selesai harus setelah waktu mulai.');
+        }
+        if (! $startsAt->isSameDay($endsAt)) {
+            $this->invalid('ends_at', 'Jadwal peminjaman harus selesai pada hari yang sama (gedung tutup pukul 18:00 WIB).');
+        }
+        if ($startsAt->format('H:i') < '07:30') {
+            $this->invalid('starts_at', 'Jadwal penggunaan ruangan paling awal dimulai pukul 07:30 WIB.');
+        }
+        if ($endsAt->format('H:i') > '18:00') {
+            $this->invalid('ends_at', 'Gedung tidak dapat digunakan setelah pukul 18:00 WIB.');
         }
         // Gunakan current/locking read: pada MySQL REPEATABLE READ, snapshot
         // dari sebelum menunggu lock ruangan tidak boleh dipakai untuk bentrok.

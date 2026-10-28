@@ -40,7 +40,7 @@
                     <x-admin-field name="ends_at" label="Selesai (WIB)" type="datetime-local" required />
                     <x-admin-field name="participant_count" label="Jumlah peserta" type="number" min="1" max="10000" required />
                     <div class="master-field master-full"><label for="master-purpose">Keperluan kegiatan</label><textarea id="master-purpose" name="purpose" x-model="form.purpose" rows="3" maxlength="5000" required></textarea></div>
-                    <p class="master-form-note master-full">Jadwal yang dibuat admin langsung disetujui. Sistem memeriksa kapasitas, status ruangan, dan bentrok sebelum menyimpan.</p>
+                    <p class="master-form-note master-full">Jam operasional ruangan adalah pukul 07:30 – 18:00 WIB (gedung tidak dapat digunakan setelah pukul 18:00). Jadwal yang dibuat admin langsung disetujui setelah pemeriksaan kapasitas dan bentrok waktu.</p>
                 </div>
             </template>
 
