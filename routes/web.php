@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->whereNumber('room')->name('rooms.show');
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
     Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+    Route::patch('/bookings/{booking}', [BookingController::class, 'update'])->whereNumber('booking')->name('bookings.update');
+    Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->whereNumber('booking')->name('bookings.cancel');
+    Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->whereNumber('booking')->name('bookings.destroy');
     Route::prefix('admin')->name('admin.')->middleware('can:view-room-master')->group(function () {
         Route::get('/rooms', RoomMasterController::class)->name('rooms.index');
         Route::post('/rooms', [RoomManagementController::class, 'store'])->name('rooms.store');
