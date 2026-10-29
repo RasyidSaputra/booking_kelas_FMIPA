@@ -1,4 +1,5 @@
 <x-dashboard-layout title="Booking ruang">
+    <x-booking-permission-notice class="mb-5" />
     <div class="dash-page-heading"><div><p class="dash-eyebrow">TEMUKAN RUANG ANDA</p><h1>Booking ruang</h1><p>Jelajahi ruang aktif dan periksa jadwal untuk rencana kegiatan Anda.</p></div><a class="dash-button" href="{{ route('dashboard') }}#calendar"><x-dashboard-icon name="calendar" />Buka kalender</a></div>
     <section class="dash-directory-filter space-y-4">
         <form class="dash-filter flex flex-wrap items-end gap-3" action="{{ route('rooms.index') }}" method="GET">

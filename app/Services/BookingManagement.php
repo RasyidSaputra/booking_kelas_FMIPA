@@ -8,9 +8,9 @@ use Illuminate\Validation\ValidationException;
 
 class BookingManagement
 {
-    public function saveSchedule(array $data, int $actor, ?int $id = null): void
+    public function saveSchedule(array $data, int $actor, ?int $id = null, ?int $lectureScheduleId = null): void
     {
-        DB::transaction(function () use ($data, $actor, $id): void {
+        DB::transaction(function () use ($data, $actor, $id, $lectureScheduleId): void {
             $snapshot = $id ? DB::table('bookings')->find($id) : null;
             abort_if($id && ! $snapshot, 404);
             $rooms = DB::table('rooms')->whereIn('id', array_unique(array_filter([$data['room_id'], $snapshot?->room_id])))
@@ -33,7 +33,16 @@ class BookingManagement
                 'starts_at' => CarbonImmutable::parse($data['starts_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
                 'ends_at' => CarbonImmutable::parse($data['ends_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
             ];
+            if ($id && $booking->lecture_schedule_id !== null
+                && (CarbonImmutable::parse($booking->starts_at)->lte(now()) || CarbonImmutable::parse($values['starts_at'])->lte(now()))) {
+                $this->invalid('starts_at', 'Hanya pertemuan kuliah yang belum dimulai yang dapat diubah, dengan waktu pengganti di masa mendatang.');
+            }
             $this->checkAvailability($rooms->get($data['room_id']), $values, $id);
+            if ($lectureScheduleId !== null) {
+                $values += ['lecture_schedule_id' => $lectureScheduleId, 'lecture_date' => substr($values['starts_at'], 0, 10)];
+            } elseif ($id && $booking->lecture_schedule_id !== null) {
+                $values['is_lecture_exception'] = true;
+            }
             $values += ['status' => 'approved', 'reviewed_by' => $actor, 'reviewed_at' => now(), 'rejection_reason' => null, 'updated_at' => now()];
             if ($id) {
                 DB::table('bookings')->where('id', $id)->update($values);
@@ -77,8 +86,12 @@ class BookingManagement
             if ($booking->room_id !== $snapshot->room_id) {
                 $this->invalid('room_id', 'Jadwal telah berubah. Muat ulang halaman.');
             }
+            if ($booking->lecture_schedule_id !== null && CarbonImmutable::parse($booking->starts_at)->lte(now())) {
+                $this->invalid('starts_at', 'Pertemuan kuliah yang sudah dimulai tetap disimpan sebagai riwayat.');
+            }
             DB::table('bookings')->where('id', $id)->update([
                 'status' => 'cancelled', 'reviewed_by' => $actor, 'reviewed_at' => now(), 'updated_at' => now(),
+                'is_lecture_exception' => $booking->lecture_schedule_id !== null,
             ]);
         }, 3);
     }
@@ -111,7 +124,7 @@ class BookingManagement
             ->when($ignore, fn ($query) => $query->where('id', '!=', $ignore))
             ->where('starts_at', '<', $data['ends_at'])->where('ends_at', '>', $data['starts_at'])->lockForUpdate()->first(['id']);
         if ($conflict) {
-            $this->invalid('starts_at', 'Jadwal bertabrakan dengan peminjaman yang sudah disetujui. Pilih waktu lain.');
+            $this->invalid('starts_at', 'Jadwal bertabrakan dengan jadwal kuliah atau peminjaman yang sudah disetujui pada '.$startsAt->format('d-m-Y H:i').'. Pilih waktu lain.');
         }
     }
 

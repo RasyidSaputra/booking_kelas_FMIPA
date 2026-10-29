@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -34,7 +36,7 @@ class BookingController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'room_id' => ['required', 'integer', 'exists:rooms,id'],
@@ -52,47 +54,52 @@ class BookingController extends Controller
             'purpose.required' => 'Tujuan peminjaman wajib diisi.',
         ]);
 
-        $startsAt = \Carbon\Carbon::parse("{$validated['booking_date']} {$validated['start_time']}");
-        $endsAt = \Carbon\Carbon::parse("{$validated['booking_date']} {$validated['end_time']}");
+        $startsAt = Carbon::parse("{$validated['booking_date']} {$validated['start_time']}");
+        $endsAt = Carbon::parse("{$validated['booking_date']} {$validated['end_time']}");
 
         // Validasi jika jam mulai sudah lewat pada hari ini
         if ($startsAt->isPast()) {
             return back()->withInput()->with('error', 'Waktu mulai peminjaman sudah lewat.');
         }
 
-        $room = DB::table('rooms')->where('id', $validated['room_id'])->first();
-        if (! $room || ! $room->is_active) {
-            return back()->withInput()->with('error', 'Ruangan ini saat ini tidak aktif.');
-        }
+        return DB::transaction(function () use ($request, $validated, $startsAt, $endsAt): RedirectResponse {
+            $room = DB::table('rooms')->where('id', $validated['room_id'])->lockForUpdate()->first();
+            if (! $room || ! $room->is_active) {
+                return back()->withInput()->with('error', 'Ruangan ini saat ini tidak aktif.');
+            }
+            if (($validated['participant_count'] ?? $room->capacity) > $room->capacity) {
+                return back()->withInput()->with('error', 'Jumlah peserta melebihi kapasitas ruangan.');
+            }
 
-        // Pengecekan bentrok jadwal dengan booking yang berstatus 'approved'
-        $hasConflict = DB::table('bookings')
-            ->where('room_id', $validated['room_id'])
-            ->where('status', 'approved')
-            ->where(function ($query) use ($startsAt, $endsAt): void {
-                $query->where('starts_at', '<', $endsAt->toDateTimeString())
-                    ->where('ends_at', '>', $startsAt->toDateTimeString());
-            })
-            ->exists();
+            // Pengecekan bentrok jadwal dengan booking yang berstatus 'approved'
+            $hasConflict = DB::table('bookings')
+                ->where('room_id', $validated['room_id'])
+                ->where('status', 'approved')
+                ->where(function ($query) use ($startsAt, $endsAt): void {
+                    $query->where('starts_at', '<', $endsAt->toDateTimeString())
+                        ->where('ends_at', '>', $startsAt->toDateTimeString());
+                })
+                ->lockForUpdate()->first(['id']);
 
-        if ($hasConflict) {
-            return back()->withInput()->with('error', 'Maaf, ruangan sudah dipesan pada jam tersebut.');
-        }
+            if ($hasConflict) {
+                return back()->withInput()->with('error', 'Maaf, waktu tersebut bertabrakan dengan jadwal kuliah atau peminjaman yang sudah disetujui.');
+            }
 
-        // Simpan peminjaman baru ke database
-        DB::table('bookings')->insert([
-            'user_id' => $request->user()->id,
-            'room_id' => $validated['room_id'],
-            'purpose' => $validated['purpose'],
-            'participant_count' => $validated['participant_count'] ?? $room->capacity,
-            'starts_at' => $startsAt->toDateTimeString(),
-            'ends_at' => $endsAt->toDateTimeString(),
-            'status' => 'pending',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            // Simpan peminjaman baru ke database
+            DB::table('bookings')->insert([
+                'user_id' => $request->user()->id,
+                'room_id' => $validated['room_id'],
+                'purpose' => $validated['purpose'],
+                'participant_count' => $validated['participant_count'] ?? $room->capacity,
+                'starts_at' => $startsAt->toDateTimeString(),
+                'ends_at' => $endsAt->toDateTimeString(),
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        return redirect()->route('bookings.index')->with('success', 'Pengajuan berhasil dibuat, silakan tunggu persetujuan Admin.');
+            return redirect()->route('bookings.index')->with('success', 'Pengajuan berhasil dibuat, silakan tunggu persetujuan Admin.');
+        }, 3);
     }
 
     /**

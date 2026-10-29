@@ -53,7 +53,7 @@ class AdminMasterTest extends TestCase
         $facility = DB::table('facilities')->insertGetId(['name' => 'Proyektor']);
         $data = $this->roomData(['facility_ids' => [$facility], 'photo' => UploadedFile::fake()->image('kelas.png')]);
         $this->postJson('/admin/rooms', $data)->assertOk()->assertJsonStructure(['message']);
-        $room = DB::table('rooms')->first();
+        $room = DB::table('rooms')->where('code', $data['code'])->first();
         Storage::disk('public')->assertExists($room->photo_path);
         $this->assertDatabaseHas('facility_room', ['room_id' => $room->id, 'facility_id' => $facility]);
 
@@ -66,9 +66,10 @@ class AdminMasterTest extends TestCase
 
     public function test_invalid_room_data_returns_modal_validation_errors_without_writes(): void
     {
+        $roomCount = DB::table('rooms')->count();
         $this->postJson('/admin/rooms', $this->roomData(['capacity' => 0, 'facility_ids' => [999], 'photo' => UploadedFile::fake()->create('bad.svg', 10, 'image/svg+xml')]))
             ->assertUnprocessable()->assertJsonValidationErrors(['capacity', 'facility_ids.0', 'photo']);
-        $this->assertDatabaseCount('rooms', 0);
+        $this->assertDatabaseCount('rooms', $roomCount);
     }
 
     public function test_room_code_must_be_unique(): void

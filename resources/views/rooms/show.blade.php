@@ -381,7 +381,7 @@
             <div class="mt-4">
                 @if($todayBookings->isEmpty())
                     <div class="text-center py-6 bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
-                        <p class="text-xs font-medium text-gray-500">Belum ada agenda peminjaman disetujui untuk hari ini. Ruangan bebas digunakan.</p>
+                        <p class="text-xs font-medium text-gray-500">Belum ada kuliah atau peminjaman disetujui untuk hari ini. Ruangan dapat diajukan dengan surat izin atau surat peminjaman ruangan.</p>
                     </div>
                 @else
                     <div class="divide-y divide-gray-100">
@@ -465,6 +465,7 @@
                     <form method="POST" action="{{ route('bookings.store') }}" class="p-6 space-y-4">
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room->id }}">
+                        <x-booking-permission-notice />
 
                         {{-- Alert jika ada error bentrok atau validasi --}}
                         @if(session('error'))

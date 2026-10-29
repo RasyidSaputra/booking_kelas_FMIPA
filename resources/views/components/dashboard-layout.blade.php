@@ -49,6 +49,7 @@
                 @can('view-room-master')
                     <p class="dash-nav-caption dash-admin-caption">ADMINISTRASI</p>
                     <nav aria-label="Navigasi admin" class="dash-sidebar-nav">
+                        <a href="{{ route('admin.lecture-schedules.index') }}" @class(['dash-nav-item', 'is-active' => request()->routeIs('admin.lecture-schedules.*')]) @if(request()->routeIs('admin.lecture-schedules.*')) aria-current="page" @endif><x-dashboard-icon name="calendar" /><span>Jadwal kuliah mingguan</span></a>
                         <a href="{{ route('admin.rooms.index') }}" @class(['dash-nav-item', 'is-active' => request()->routeIs('admin.rooms.*')]) @if(request()->routeIs('admin.rooms.*')) aria-current="page" @endif><x-dashboard-icon name="building" /><span>Master data kelas</span><span class="dash-admin-tag">Admin</span></a>
                     </nav>
                 @endcan

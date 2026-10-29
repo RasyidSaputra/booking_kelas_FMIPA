@@ -77,7 +77,7 @@ class RoomController extends Controller
             ? DB::table('bookings')
                 ->where('status', 'approved')
                 ->where('starts_at', '<=', $now->toDateTimeString())
-                ->where('ends_at', '>=', $now->toDateTimeString())
+                ->where('ends_at', '>', $now->toDateTimeString())
                 ->distinct('room_id')
                 ->count('room_id')
             : 0;
@@ -118,7 +118,7 @@ class RoomController extends Controller
             ->where('room_id', $room->id)
             ->where('status', 'approved')
             ->where('starts_at', '<=', $now)
-            ->where('ends_at', '>=', $now)
+            ->where('ends_at', '>', $now)
             ->select('bookings.*', 'users.name as user_name')
             ->orderBy('ends_at')
             ->first();

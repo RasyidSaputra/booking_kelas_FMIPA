@@ -31,6 +31,7 @@
             this.cancelModalOpen = true;
         }
     }">
+        <x-booking-permission-notice class="mb-5" />
         <div class="dash-page-heading">
             <div>
                 <p class="dash-eyebrow">RENCANA KEGIATAN ANDA</p>

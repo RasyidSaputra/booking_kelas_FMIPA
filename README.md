@@ -62,6 +62,55 @@ DB_PASSWORD=
 
 Kemudian jalankan `php artisan config:clear` dan `php artisan migrate`.
 
+## Jadwal kuliah mingguan
+
+Setelah memperbarui proyek, jalankan `php artisan migrate` dan `npm.cmd run build`.
+Masuk sebagai admin, lalu buka **Jadwal kuliah mingguan** pada menu administrasi.
+Isi semester, mata kuliah/kelas, ruangan aktif, dosen/penanggung jawab, jumlah peserta,
+hari Senin–Jumat, jam, dan periode semester (maksimal 366 hari).
+
+Sistem membuat semua pertemuan mendatang sekaligus. Jadwal langsung tampil pada
+kalender dan memblokir peminjaman yang waktunya beririsan. Jika satu pertemuan
+bentrok dengan jadwal disetujui, seluruh penyimpanan dibatalkan dan tanggal bentrok
+ditampilkan. Pengajuan yang masih menunggu persetujuan diperiksa ulang saat disetujui.
+Fitur ini tidak memerlukan cron atau scheduler; ketersediaan dihitung dari jadwal bertanggal.
+
+Untuk hari libur atau kuliah pengganti, buka **Jadwal per tanggal**, lalu pilih
+**Edit pertemuan ini** atau **Batalkan pertemuan ini**. Untuk mengubah pola,
+gunakan **Ubah jadwal berikutnya** dan tentukan tanggal berlakunya. Riwayat,
+pertemuan yang sudah dimulai, dan pengecualian individual dipertahankan.
+**Hentikan rangkaian** membatalkan pertemuan yang belum dimulai sejak tanggal pilihan.
+
+Peminjaman tetap diperbolehkan pada hari tanpa kuliah, termasuk Sabtu–Minggu,
+dalam jam operasional 07:30–18:00 WIB. Peminjam wajib sudah memiliki surat izin
+atau surat peminjaman ruangan dan tetap menunggu persetujuan admin.
+Informasi ini tersedia pada halaman ruangan, form peminjaman, dan riwayat peminjaman;
+admin juga diingatkan untuk memeriksa surat sebelum menyetujui pengajuan.
+
+### Impor jadwal dari CSV
+
+Buka **Jadwal kuliah mingguan → Impor CSV**, lalu unduh template.
+Isi data melalui Excel dan simpan sebagai **CSV UTF-8 (.csv)**. Gunakan kode ruangan
+dan NIP dosen/administrator yang sudah terdaftar; atur kolom NIP sebagai teks agar
+angka nol di depan tetap tersimpan. Jam menggunakan `HH:MM` dalam WIB dan tanggal
+menggunakan `YYYY-MM-DD`. Pemisah koma atau titik koma diterima.
+
+Setiap baris berisi `semester`, `kode_ruangan`, `nip_dosen`, `mata_kuliah_kelas`,
+`hari`, `mulai`, `selesai`, `peserta`, `awal_periode`, dan `akhir_periode`.
+Maksimal 200 baris jadwal dan 1 MB per file.
+
+Unggah CSV untuk melihat pratinjau baris siap impor, duplikat, dan kesalahan.
+Perbaiki seluruh kesalahan di file dan unggah ulang sebelum menekan **Simpan hasil impor**.
+Pratinjau berlaku selama 30 menit. Pemeriksaan mencakup ruangan aktif, NIP terdaftar,
+kapasitas, jam operasional, periode, bentrok antarbaris, serta jadwal yang sudah disetujui.
+Baris duplikat dalam file atau terhadap pola tersimpan dilewati tanpa mengubah jadwal,
+termasuk rangkaian yang sudah dihentikan atau memiliki pengecualian pertemuan.
+
+Penyimpanan memeriksa ulang keadaan database dan berjalan dalam satu transaksi.
+Jika ada kesalahan atau bentrok baru, seluruh impor dibatalkan. Mengunggah ulang file
+yang sama tidak menggandakan pola maupun pertemuan. Impor menambahkan pola baru;
+perubahan pola tersimpan tetap dilakukan melalui **Ubah jadwal berikutnya**.
+
 ## Pemeriksaan
 
 ```powershell
