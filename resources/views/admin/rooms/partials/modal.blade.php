@@ -34,6 +34,7 @@
 
             <template x-if="kind === 'schedule'">
                 <div class="master-form-grid">
+                    <p class="master-form-note master-full" x-show="form.lecture_schedule_id">Perubahan hanya berlaku untuk pertemuan ini. Untuk mengubah pola mingguan, gunakan menu Jadwal kuliah mingguan.</p>
                     <div class="master-field"><label for="master-room_id">Ruangan</label><select id="master-room_id" name="room_id" x-model="form.room_id" required><option value="">Pilih ruangan</option>@foreach($roomOptions as $room)<option value="{{ $room->id }}" @disabled(! $room->is_active)>{{ $room->code }} — {{ $room->name }} ({{ $room->capacity }} orang){{ $room->is_active ? '' : ' · Nonaktif' }}</option>@endforeach</select></div>
                     <div class="master-field"><label for="master-user_id">Penanggung jawab</label><select id="master-user_id" name="user_id" x-model="form.user_id" required><option value="">Pilih pengguna</option>@foreach($userOptions as $person)<option value="{{ $person->id }}">{{ $person->name }}{{ $person->identity_number ? ' — '.$person->identity_number : '' }}</option>@endforeach</select></div>
                     <x-admin-field name="starts_at" label="Mulai (WIB)" type="datetime-local" required />
@@ -49,6 +50,7 @@
                     <span class="master-confirm-icon"><x-dashboard-icon name="info" /></span>
                     <h3 x-text="form.room_name || form.name || form.purpose || 'Konfirmasi tindakan'"></h3>
                     <p x-show="kind === 'approve'">Setujui pengajuan ini? Jadwal dan kapasitas ruangan akan diperiksa ulang.</p>
+                    <p x-show="kind === 'approve'">Pastikan peminjam sudah memiliki surat izin atau surat peminjaman ruangan, termasuk untuk kegiatan pada hari tanpa kuliah.</p>
                     <p x-show="kind === 'reject'">Pengajuan akan ditolak dan alasan berikut dapat dibaca oleh peminjam.</p>
                     <p x-show="kind === 'cancel'">Jadwal akan dibatalkan. Riwayat peminjaman tetap tersimpan.</p>
                     <p x-show="kind.startsWith('delete-')">Data ini akan dihapus. Data yang masih digunakan atau memiliki riwayat akan ditolak penghapusannya.</p>

@@ -38,6 +38,7 @@
 
         <section class="master-panel" aria-label="Pengelolaan master data">
             <nav class="master-tabs" aria-label="Bagian master data">
+                <a class="master-tab" href="{{ route('admin.lecture-schedules.index') }}"><x-dashboard-icon name="calendar" />Kuliah mingguan</a>
                 @foreach($tabs as $key => [$label, $icon])
                     <a href="{{ route('admin.rooms.index', ['tab' => $key]) }}" @class(['master-tab', 'is-active' => $tab === $key]) @if($tab === $key) aria-current="page" @endif><x-dashboard-icon :name="$icon" />{{ $label }}@if($key === 'bookings' && $stats['pending'])<span>{{ $stats['pending'] }}</span>@endif</a>
                 @endforeach
@@ -91,12 +92,12 @@
                                         <td><strong>{{ $item->room_name }}</strong><small>{{ $item->room_code }} · {{ $item->participant_count }} peserta</small><p class="master-purpose">{{ $item->purpose }}</p>@if($item->rejection_reason)<small>Alasan: {{ $item->rejection_reason }}</small>@endif</td>
                                         <td><strong>{{ $item->user_name }}</strong><small>{{ $item->identity_number }}</small></td>
                                         <td><strong>{{ \Carbon\CarbonImmutable::parse($item->starts_at)->locale('id')->translatedFormat('d M Y, H:i') }}</strong><small>sampai {{ \Carbon\CarbonImmutable::parse($item->ends_at)->locale('id')->translatedFormat('d M Y, H:i') }}</small></td>
-                                        <td><x-booking-status :status="$item->status" /></td>
+                                        <td><x-booking-status :status="$item->status" />@if($item->lecture_schedule_id)<small>Kuliah mingguan{{ $item->is_lecture_exception ? ' · Pengecualian' : '' }}</small>@endif</td>
                                         <td><div class="master-row-actions">
                                             @if($tab === 'bookings' && $item->status === 'pending')
                                                 <button type="button" class="is-approve" x-on:click="open('approve', @js($item))">Setujui</button><button type="button" class="is-danger" x-on:click="open('reject', @js($item))">Tolak</button>
                                             @elseif($tab === 'schedules')
-                                                <button type="button" x-on:click="open('schedule', @js($item))">Edit</button><button type="button" class="is-danger" x-on:click="open('cancel', @js($item))">Batalkan</button>
+                                                <button type="button" x-on:click="open('schedule', @js($item))">{{ $item->lecture_schedule_id ? 'Edit pertemuan ini' : 'Edit' }}</button><button type="button" class="is-danger" x-on:click="open('cancel', @js($item))">{{ $item->lecture_schedule_id ? 'Batalkan pertemuan ini' : 'Batalkan' }}</button>
                                             @else<span class="master-readonly">Sudah diproses</span>@endif
                                         </div></td>
                                     @endif

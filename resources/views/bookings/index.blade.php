@@ -1,4 +1,5 @@
 <x-dashboard-layout title="Bookingan saya">
+    <x-booking-permission-notice class="mb-5" />
     <div class="dash-page-heading"><div><p class="dash-eyebrow">RENCANA KEGIATAN ANDA</p><h1>Bookingan saya</h1><p>Pantau status dan riwayat peminjaman ruangan Anda.</p></div><a class="dash-button is-primary" href="{{ route('rooms.index') }}"><x-dashboard-icon name="building" />Jelajahi ruangan</a></div>
 
     @if(session('success'))
