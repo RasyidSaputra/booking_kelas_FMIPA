@@ -61,9 +61,11 @@ Untuk pengembangan:
 composer run dev
 ```
 
-Buka **http://localhost:8000**. Perintah tersebut menjalankan server Laravel, queue worker, dan Vite. Untuk server saja dengan aset hasil build, gunakan `php artisan serve`.
+Buka **http://127.0.0.1:8001**. Perintah tersebut menjalankan server Laravel, queue worker, dan Vite. Untuk server saja dengan aset hasil build, gunakan `php artisan serve --host=127.0.0.1 --port=8001`.
 
 Gunakan `npm.cmd` jika PowerShell memblokir `npm.ps1`. Script pengembangan tidak menjalankan Pail yang memerlukan PCNTL. Pada Laragon, arahkan document root ke folder `public` dan sesuaikan `APP_URL`.
+
+Port `8001` digunakan khusus proyek FMIPA agar tidak bertabrakan dengan proyek lain pada port `8000`. Setelah memperbarui konfigurasi ini, hentikan proses pengembangan lama dengan `Ctrl+C`, kemudian jalankan kembali `composer run dev`. Buka URL yang ditampilkan oleh proses **server**, bukan URL Vite.
 
 ### MySQL
 
@@ -82,7 +84,7 @@ Jalankan `php artisan config:clear`, lalu `php artisan migrate`.
 
 ## REST API
 
-Base URL lokal: **`http://localhost:8000/api/v1`**.
+Base URL lokal: **`http://127.0.0.1:8001/api/v1`**.
 
 - [Panduan endpoint, autentikasi, dan contoh request](docs/API.md)
 - [Koleksi Postman yang dapat diimpor](docs/postman/booking-kelas-fmipa.postman_collection.json)

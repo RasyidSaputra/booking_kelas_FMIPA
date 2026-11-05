@@ -4,7 +4,7 @@ API v1 menyediakan alur peminjaman dalam format JSON dengan database yang sama d
 
 ## Koneksi dan autentikasi
 
-- Base URL: `http://localhost:8000/api/v1` atau `${APP_URL}/api/v1`.
+- Base URL: `http://127.0.0.1:8001/api/v1` atau `${APP_URL}/api/v1`.
 - Header: `Accept: application/json`; untuk body JSON gunakan `Content-Type: application/json`.
 - Selain login, semua endpoint memerlukan `Authorization: Bearer <token>`.
 - Akun menggunakan NIM/NIP dan kata sandi yang sama dengan web. Registrasi tersedia melalui web; API tidak menyediakan pendaftaran atau perubahan role.
