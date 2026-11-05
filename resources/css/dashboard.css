@@ -721,6 +721,7 @@ a.dash-day:hover {
     height: 24px;
     border-radius: 50%;
     font-size: 11px;
+    line-height: 1;
     color: #58717e;
 }
 .dash-day-number.is-today {

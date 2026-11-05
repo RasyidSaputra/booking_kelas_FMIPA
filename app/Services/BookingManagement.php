@@ -8,6 +8,29 @@ use Illuminate\Validation\ValidationException;
 
 class BookingManagement
 {
+    public function submit(array $data, int $actor): int
+    {
+        return DB::transaction(function () use ($data, $actor): int {
+            $room = DB::table('rooms')->where('id', $data['room_id'])->lockForUpdate()->first();
+            $startsAt = CarbonImmutable::parse($data['booking_date'].' '.$data['start_time']);
+            if ($startsAt->lte(now())) {
+                $this->invalid('start_time', 'Waktu mulai peminjaman sudah lewat.');
+            }
+            $values = [
+                'room_id' => (int) $data['room_id'], 'user_id' => $actor,
+                'purpose' => $data['purpose'],
+                'participant_count' => $data['participant_count'] ?? $room?->capacity ?? 0,
+                'starts_at' => $startsAt->toDateTimeString(),
+                'ends_at' => CarbonImmutable::parse($data['booking_date'].' '.$data['end_time'])->toDateTimeString(),
+            ];
+            $this->checkAvailability($room, $values);
+
+            return DB::table('bookings')->insertGetId($values + [
+                'status' => 'pending', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }, 3);
+    }
+
     public function saveSchedule(array $data, int $actor, ?int $id = null, ?int $lectureScheduleId = null): void
     {
         DB::transaction(function () use ($data, $actor, $id, $lectureScheduleId): void {

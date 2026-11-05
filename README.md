@@ -1,55 +1,73 @@
-# Dashboard Peminjaman Kelas FMIPA Universitas Riau
+# Peminjaman Kelas FMIPA Universitas Riau
 
-Aplikasi berbasis web untuk membantu pengelolaan peminjaman ruang kelas di **Fakultas Matematika dan Ilmu Pengetahuan Alam (FMIPA), Universitas Riau**. Dashboard ini ditujukan untuk mempermudah pengecekan ketersediaan kelas, pengajuan peminjaman, serta pemantauan penggunaan ruangan secara terpusat.
+Aplikasi pengelolaan ruang kelas untuk **Fakultas Matematika dan Ilmu Pengetahuan Alam, Universitas Riau**. Pengguna dapat melihat ketersediaan ruangan, mengajukan peminjaman, dan memantau statusnya. Administrator mengelola data serta meninjau pengajuan.
 
-## Rencana fitur
+**Web Blade dan REST API menggunakan database serta aturan peminjaman yang sama.**
 
-- Dashboard ringkasan penggunaan dan peminjaman kelas.
-- Pengelolaan data ruangan, kapasitas, dan fasilitas kelas.
-- Informasi jadwal dan ketersediaan ruangan.
-- Pengajuan peminjaman beserta persetujuan atau penolakannya oleh pengelola.
-- Riwayat dan status peminjaman kelas.
+[Instalasi](#instalasi) | [REST API](#rest-api) | [Struktur proyek](#struktur-proyek) | [Jadwal kuliah](#jadwal-kuliah-mingguan) | [Pengujian](#pengujian)
 
-Proyek saat ini berisi setup awal Laravel 13. Fitur peminjaman dan dashboard masih dalam tahap pengembangan; halaman awal masih menggunakan halaman bawaan Laravel.
+## Fitur
+
+| Bagian | Kemampuan |
+| --- | --- |
+| Akun | Registrasi web, login NIM/NIP, profil; peran mahasiswa, dosen, dan admin |
+| Ruangan | Pencarian ruangan aktif, kapasitas, fasilitas, dan informasi jadwal |
+| Peminjaman | Pengajuan, riwayat pribadi, serta persetujuan atau penolakan admin |
+| Administrasi web | Pengelolaan ruangan, fasilitas, pengguna, dan jadwal |
+| Jadwal kuliah web | Pola mingguan per semester, pengecualian pertemuan, dan impor CSV dengan pratinjau |
+| REST API v1 | Login token, profil akun, ruangan, pemeriksaan ketersediaan, pengajuan, riwayat, dan peninjauan admin |
+
+API saat ini mencakup alur peminjaman utama. CRUD master data, registrasi, pengelolaan jadwal kuliah, serta impor CSV tersedia melalui web.
 
 ## Teknologi
 
-- Laravel 13 dan PHP 8.4 atau lebih baru.
-- Blade, Vite, dan Tailwind CSS.
-- SQLite untuk pengembangan awal; konfigurasi dapat disesuaikan ke MySQL.
-- Zona waktu `Asia/Jakarta` dan locale aplikasi `id`.
+- Laravel 13, PHP 8.4+, dan Composer 2.
+- Laravel Sanctum 4.3 untuk Bearer token API.
+- Blade, Alpine.js, Tailwind CSS, dan Vite.
+- SQLite untuk instalasi awal; MySQL didukung melalui konfigurasi database.
+- Zona waktu `Asia/Jakarta` (WIB), locale `id`.
 
-## Menjalankan proyek
+## Instalasi
 
-Prasyarat: PHP 8.4+, Composer 2, serta Node.js 22.12+ dengan npm. Pastikan ekstensi PHP yang dibutuhkan Laravel tersedia, termasuk PDO SQLite untuk konfigurasi bawaan.
+Prasyarat: PHP 8.4+, Composer 2, Node.js 22.12+ dan npm, serta ekstensi PHP yang dibutuhkan Laravel. Untuk SQLite, aktifkan PDO SQLite.
 
-Untuk instalasi pertama setelah clone, jalankan dari direktori proyek di PowerShell:
+Jalankan dari direktori proyek di PowerShell **hanya untuk instalasi baru**:
 
 ```powershell
 composer install
 Copy-Item .env.example .env
 php artisan key:generate
-New-Item -ItemType File -Path database/database.mysql -Force
+New-Item -ItemType File -Path database/database.sqlite -Force
+php artisan migrate
+npm.cmd install
+npm.cmd run build
+php artisan storage:link
+```
+
+Pada proyek yang sudah memiliki `.env` dan database, cukup perbarui dependensi dan jalankan migrasi:
+
+```powershell
+composer install
 php artisan migrate
 npm.cmd install
 npm.cmd run build
 ```
 
-Langkah pembuatan `.env` dan database di atas hanya untuk instalasi baru. Pada komputer yang sudah disiapkan, langsung jalankan:
+Migrasi API menambahkan tabel `personal_access_tokens`. Gunakan migrasi biasa agar data dan akun yang sudah ada tetap tersimpan.
+
+Untuk pengembangan:
 
 ```powershell
 composer run dev
 ```
 
-Buka **http://localhost:8000**. Perintah tersebut menjalankan server Laravel, queue worker, dan Vite. Untuk menjalankan server saja dengan aset hasil build, gunakan `php artisan serve`.
+Buka **http://localhost:8000**. Perintah tersebut menjalankan server Laravel, queue worker, dan Vite. Untuk server saja dengan aset hasil build, gunakan `php artisan serve`.
 
-Di Windows, `npm.cmd` dapat digunakan jika PowerShell memblokir `npm.ps1`. Script `composer run dev` disesuaikan agar tidak menjalankan Laravel Pail yang membutuhkan ekstensi PCNTL.
+Gunakan `npm.cmd` jika PowerShell memblokir `npm.ps1`. Script pengembangan tidak menjalankan Pail yang memerlukan PCNTL. Pada Laragon, arahkan document root ke folder `public` dan sesuaikan `APP_URL`.
 
-Jika menggunakan virtual host Laragon, arahkan document root ke folder **public** dan sesuaikan `APP_URL` pada `.env`.
+### MySQL
 
-## Database MySQL (opsional)
-
-Buat database `booking_kelas_fmipa`, lalu sesuaikan `.env` dengan kredensial MySQL lokal:
+Buat database `booking_kelas_fmipa`, kemudian atur `.env`:
 
 ```dotenv
 DB_CONNECTION=mysql
@@ -60,7 +78,54 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Kemudian jalankan `php artisan config:clear` dan `php artisan migrate`.
+Jalankan `php artisan config:clear`, lalu `php artisan migrate`.
+
+## REST API
+
+Base URL lokal: **`http://localhost:8000/api/v1`**.
+
+- [Panduan endpoint, autentikasi, dan contoh request](docs/API.md)
+- [Koleksi Postman yang dapat diimpor](docs/postman/booking-kelas-fmipa.postman_collection.json)
+
+Gunakan akun terdaftar yang sama dengan web. Login menggunakan `identity_number` (NIM/NIP), `password`, dan `device_name`. Registrasi pengguna baru dilakukan melalui web; akun admin dikelola sesuai mekanisme proyek.
+
+| Method | Endpoint relatif | Akses |
+| --- | --- | --- |
+| POST | `/login` | Tanpa token |
+| GET | `/me` | Pengguna login |
+| POST | `/logout` | Pengguna login |
+| GET | `/rooms` | Pengguna login |
+| GET | `/rooms/{room}` | Pengguna login |
+| GET | `/rooms/{room}/availability` | Pengguna login |
+| GET | `/bookings` | Riwayat sendiri |
+| POST | `/bookings` | Pengguna login |
+| GET | `/bookings/{booking}` | Pemilik atau admin |
+| GET | `/admin/bookings` | Admin |
+| PATCH | `/admin/bookings/{booking}/review` | Admin |
+
+Kirim `Accept: application/json` dan `Authorization: Bearer <token>` untuk endpoint terproteksi. Token berlaku **7 hari**; logout mencabut token yang digunakan saja. Login dibatasi 5 request/menit per kombinasi IP dan NIM/NIP serta 20 request/menit per IP. Endpoint terautentikasi dibatasi 120 request/menit per pengguna.
+
+## Struktur proyek
+
+```text
+app/
+  Http/Controllers/Api/     Controller JSON untuk API v1
+  Http/Controllers/Admin/   Controller administrasi web
+  Http/Requests/            Validasi input dan otorisasi request
+  Http/Resources/           Data respons API yang ditampilkan secara eksplisit
+  Services/                Aturan bisnis peminjaman, jadwal, dan impor
+routes/
+  web.php                  Halaman utama, peminjaman, dan profil web
+  admin.php                Route administrasi web
+  auth.php                 Autentikasi web
+  api.php                  REST API /api/v1
+  console.php              Perintah console
+config/sanctum.php          Konfigurasi Bearer token API
+```
+
+`bootstrap/app.php` memuat route web dan API. `web.php` memuat `auth.php`, serta `admin.php` di dalam grup autentikasi web. Route admin tetap dilindungi hak `view-room-master`. Nama dan URL route web dipertahankan.
+
+`BookingManagement` menangani pengajuan serta peninjauan untuk web dan API. Controller menentukan bentuk respons: halaman/redirect untuk web, JSON untuk API. Pemeriksaan ruangan aktif, kapasitas, dan bentrok dilakukan di dalam transaksi dengan penguncian ruangan.
 
 ## Jadwal kuliah mingguan
 
@@ -111,15 +176,21 @@ Jika ada kesalahan atau bentrok baru, seluruh impor dibatalkan. Mengunggah ulang
 yang sama tidak menggandakan pola maupun pertemuan. Impor menambahkan pola baru;
 perubahan pola tersimpan tetap dilakukan melalui **Ubah jadwal berikutnya**.
 
-## Pemeriksaan
+## Pengujian
 
 ```powershell
-composer test
+php artisan test --compact
+php artisan test --compact --filter=ApiTest
+php artisan route:list --path=api --except-vendor
 npm.cmd run build
 ```
 
-## Git
+Tes otomatis menggunakan **SQLite `:memory:`** dan memiliki penjagaan agar tidak menjalankan migrasi pada database utama. Cakupan API meliputi token, pembatasan login, otorisasi pemilik/admin, validasi waktu dan kapasitas, akhir pekan, bentrok, persetujuan, penolakan, dan kesesuaian aturan web/API.
 
-File `.env`, dependensi `vendor` dan `node_modules`, database SQLite lokal, log, serta aset hasil build diabaikan oleh Git. File `.env.example`, `composer.lock`, dan `package-lock.json` disimpan untuk memudahkan setup yang konsisten.
+Lihat [catatan verifikasi](docs/API.md#verifikasi-implementasi) untuk hasil pengujian dan batas pemeriksaannya.
 
-Dokumentasi framework: [Laravel 13](https://laravel.com/docs/13.x).
+## Git dan konfigurasi
+
+`.env`, token/kata sandi asli, dependensi, database lokal, log, dan aset hasil build tidak disimpan di Git. Simpan `.env.example`, `composer.lock`, dan `package-lock.json` untuk instalasi yang konsisten.
+
+Referensi resmi: [Laravel 13](https://laravel.com/docs/13.x), [Routing](https://laravel.com/docs/13.x/routing), dan [Sanctum](https://laravel.com/docs/13.x/sanctum).
