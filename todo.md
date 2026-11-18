@@ -1,4 +1,4 @@
-# Persiapan dan TODO Laravel — Peminjaman Ruangan FMIPA UNRI
+# Persiapan dan TODO Laravel — KelasKu
 
 Dokumen ini berisi urutan persiapan dan checklist penerapan materi. Perintah contoh belum otomatis dianggap berhasil. Status terbaru tersedia pada **Pusat master data admin**; pengujian PHP/JavaScript dan build aset sudah berhasil dijalankan. Log tahap sebelumnya tetap disimpan sebagai dokumentasi. Pemeriksaan visual browser dan uji konkurensi MySQL langsung belum dijalankan.
 
@@ -373,7 +373,7 @@ Pemilik: **Anda (A1)**. Kode awal disiapkan pada **26 Oktober 2026**, mengikuti 
 
 | Bagian | File | Perilaku yang disiapkan |
 | --- | --- | --- |
-| Layout auth | `resources/views/components/auth-layout.blade.php` | Identitas Ruang FMIPA, navigasi masuk/daftar, ilustrasi denah, layout responsif |
+| Layout auth | `resources/views/components/auth-layout.blade.php` | Identitas KelasKu, navigasi masuk/daftar, ilustrasi denah, layout responsif |
 | Field form | `resources/views/components/auth-field.blade.php` | Label, old input selain password, error per field, tombol tampil/sembunyikan kata sandi |
 | Login | `resources/views/auth/login.blade.php` | NIM/NIP, kata sandi, ingat saya, lupa kata sandi, tautan daftar |
 | Registrasi | `resources/views/auth/register.blade.php` | Nama, NIM/NIP, email, kata sandi dan konfirmasi |
@@ -798,7 +798,7 @@ Isi hasil nyata, termasuk error dan langkah perbaikan. Dokumentasi perintah adal
 
 ## Checklist Penerapan Materi Laravel
 
-Proyek: Dashboard Peminjaman Ruangan FMIPA UNRI
+Proyek: KelasKu — Peminjaman Kelas FMIPA UNRI
 Tim: 4 anggota
 Target proyek: Laravel 13 dan PHP 8.4
 Dasar checklist: 9 PDF materi dan latihan yang diberikan dosen.

@@ -95,7 +95,7 @@
     gap: 12px;
     color: var(--dash-navy);
 }
-.dash-laravel-logo {
+.dash-brand-logo {
     width: 35px;
     height: 35px;
     fill: currentColor;
@@ -1255,7 +1255,7 @@ a.dash-day:hover {
     .dash-topbar-brand {
         gap: 10px;
     }
-    .dash-laravel-logo {
+    .dash-brand-logo {
         width: 27px;
         height: 27px;
     }

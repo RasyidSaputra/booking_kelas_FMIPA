@@ -233,6 +233,65 @@ class LectureScheduleTest extends TestCase
         }
     }
 
+    public function test_owner_revision_survives_a_recurring_schedule_update(): void
+    {
+        $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
+        $meeting = DB::table('bookings')->where('lecture_date', '2026-11-09')->first();
+
+        $this->actingAs($this->lecturer)->patch('/bookings/'.$meeting->id, [
+            'booking_date' => '2026-11-10', 'start_time' => '13:00', 'end_time' => '14:00',
+            'purpose' => 'Kuliah pengganti', 'participant_count' => 40,
+        ])->assertRedirect(route('bookings.index'))->assertSessionHas('success');
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $meeting->id, 'status' => 'pending', 'is_lecture_exception' => true,
+            'starts_at' => '2026-11-10 13:00:00', 'lecture_date' => '2026-11-09',
+        ]);
+        $this->actingAs($this->admin)->patch('/admin/lecture-schedules/'.$meeting->lecture_schedule_id,
+            $this->data(['effective_from' => '2026-11-02', 'purpose' => 'Kalkulus - pola baru']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, DB::table('bookings')->where('lecture_schedule_id', $meeting->lecture_schedule_id)
+            ->where('lecture_date', '2026-11-09')->count());
+        $this->assertDatabaseHas('bookings', ['id' => $meeting->id, 'status' => 'pending', 'purpose' => 'Kuliah pengganti']);
+    }
+
+    public function test_owner_cancellation_survives_a_recurring_schedule_update(): void
+    {
+        $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
+        $meeting = DB::table('bookings')->where('lecture_date', '2026-11-09')->first();
+
+        $this->actingAs($this->lecturer)->patch('/bookings/'.$meeting->id.'/cancel')
+            ->assertRedirect(route('bookings.index'))->assertSessionHas('success');
+        $this->assertDatabaseHas('bookings', ['id' => $meeting->id, 'status' => 'cancelled', 'is_lecture_exception' => true]);
+
+        $this->actingAs($this->admin)->patch('/admin/lecture-schedules/'.$meeting->lecture_schedule_id,
+            $this->data(['effective_from' => '2026-11-02', 'purpose' => 'Kalkulus - pola baru']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(1, DB::table('bookings')->where('lecture_schedule_id', $meeting->lecture_schedule_id)
+            ->where('lecture_date', '2026-11-09')->count());
+        $this->assertDatabaseHas('bookings', ['id' => $meeting->id, 'status' => 'cancelled']);
+    }
+
+    public function test_owner_cannot_change_a_lecture_that_has_started(): void
+    {
+        $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
+        $meeting = DB::table('bookings')->where('lecture_date', '2026-11-02')->first();
+        $this->travelTo(now()->setDate(2026, 11, 2)->setTime(8, 30));
+        $this->actingAs($this->lecturer)->get('/bookings')->assertOk()
+            ->assertDontSee('id: '.$meeting->id.',', false);
+
+        $this->from('/bookings')->patch('/bookings/'.$meeting->id, [
+            'booking_date' => '2026-11-03', 'start_time' => '13:00', 'end_time' => '14:00',
+            'purpose' => 'Tidak boleh mengubah riwayat', 'participant_count' => 40,
+        ])->assertRedirect('/bookings')->assertSessionHas('error');
+        $this->from('/bookings')->patch('/bookings/'.$meeting->id.'/cancel')
+            ->assertRedirect('/bookings')->assertSessionHas('error');
+        $this->assertDatabaseHas('bookings', [
+            'id' => $meeting->id, 'status' => 'approved', 'starts_at' => '2026-11-02 08:00:00',
+        ]);
+    }
+
     private function data(array $changes = []): array
     {
         return array_replace([

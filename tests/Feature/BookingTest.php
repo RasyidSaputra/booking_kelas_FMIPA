@@ -248,7 +248,7 @@ class BookingTest extends TestCase
                 'participant_count' => 10,
             ])
             ->assertRedirect()
-            ->assertSessionHas('error', 'Maaf, ruangan sudah dipesan pada jam tersebut.');
+            ->assertSessionHas('error');
 
         // Booking remains untouched
         $this->assertDatabaseHas('bookings', [

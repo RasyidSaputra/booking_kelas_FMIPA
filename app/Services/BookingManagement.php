@@ -31,6 +31,73 @@ class BookingManagement
         }, 3);
     }
 
+    public function reviseForOwner(int $id, array $data, int $actor): bool
+    {
+        return DB::transaction(function () use ($id, $data, $actor): bool {
+            [$booking, $room] = $this->lockForOwner($id, $actor);
+            $startsAt = CarbonImmutable::parse($data['booking_date'].' '.$data['start_time']);
+            if ($startsAt->lte(now())) {
+                $this->invalid('start_time', 'Waktu mulai peminjaman sudah lewat.');
+            }
+            $values = [
+                'room_id' => $booking->room_id,
+                'purpose' => $data['purpose'],
+                'participant_count' => $data['participant_count'] ?? $booking->participant_count,
+                'starts_at' => $startsAt->toDateTimeString(),
+                'ends_at' => CarbonImmutable::parse($data['booking_date'].' '.$data['end_time'])->toDateTimeString(),
+            ];
+            $this->checkAvailability($room, $values, $id);
+            $requiresApproval = $booking->status === 'approved';
+            if ($requiresApproval) {
+                $values += ['status' => 'pending', 'reviewed_by' => null, 'reviewed_at' => null, 'rejection_reason' => null];
+            }
+            if ($booking->lecture_schedule_id !== null) {
+                $values['is_lecture_exception'] = true;
+            }
+            DB::table('bookings')->where('id', $id)->update($values + ['updated_at' => now()]);
+
+            return $requiresApproval;
+        }, 3);
+    }
+
+    public function cancelForOwner(int $id, int $actor): void
+    {
+        DB::transaction(function () use ($id, $actor): void {
+            [$booking] = $this->lockForOwner($id, $actor);
+            DB::table('bookings')->where('id', $id)->update([
+                'status' => 'cancelled', 'updated_at' => now(),
+                'is_lecture_exception' => $booking->lecture_schedule_id !== null,
+            ]);
+        }, 3);
+    }
+
+    private function lockForOwner(int $id, int $actor): array
+    {
+        $snapshot = DB::table('bookings')->find($id);
+        abort_if(! $snapshot, 404, 'Booking tidak ditemukan.');
+        abort_if((int) $snapshot->user_id !== $actor, 403, 'Anda tidak memiliki hak akses untuk mengubah booking ini.');
+
+        // Urutan penguncian sama dengan persetujuan admin: ruangan, lalu booking.
+        $room = DB::table('rooms')->where('id', $snapshot->room_id)->lockForUpdate()->first();
+        $booking = DB::table('bookings')->where('id', $id)->lockForUpdate()->first();
+        abort_if(! $booking, 404, 'Booking tidak ditemukan.');
+        abort_if((int) $booking->user_id !== $actor, 403, 'Anda tidak memiliki hak akses untuk mengubah booking ini.');
+        if ($booking->room_id !== $snapshot->room_id) {
+            $this->invalid('room_id', 'Jadwal telah berubah. Muat ulang halaman dan coba kembali.');
+        }
+        if (! in_array($booking->status, ['pending', 'approved'], true)) {
+            $this->invalid('status', 'Booking dengan status ini tidak dapat diubah.');
+        }
+        if (CarbonImmutable::parse($booking->ends_at)->lte(now())) {
+            $this->invalid('status', 'Booking yang sudah selesai tidak dapat diubah.');
+        }
+        if ($booking->lecture_schedule_id !== null && CarbonImmutable::parse($booking->starts_at)->lte(now())) {
+            $this->invalid('status', 'Pertemuan kuliah yang sudah dimulai tetap disimpan sebagai riwayat.');
+        }
+
+        return [$booking, $room];
+    }
+
     public function saveSchedule(array $data, int $actor, ?int $id = null, ?int $lectureScheduleId = null): void
     {
         DB::transaction(function () use ($data, $actor, $id, $lectureScheduleId): void {

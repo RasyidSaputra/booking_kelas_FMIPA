@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "rasyidsaputra/booking-kelas-fmipa",
+    "name": "rasyidsaputra/kelasku",
     "type": "project",
-    "description": "Dashboard peminjaman kelas FMIPA Universitas Riau.",
+    "description": "KelasKu, aplikasi peminjaman kelas FMIPA Universitas Riau.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
