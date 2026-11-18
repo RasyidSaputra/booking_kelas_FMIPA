@@ -6,8 +6,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="description" content="Akses layanan peminjaman ruang kelas FMIPA Universitas Riau.">
-        <title>{{ $page === 'register' ? 'Daftar akun' : 'Masuk' }} · Ruang FMIPA</title>
+        <meta name="description" content="{{ config('app.name') }}, layanan peminjaman ruang kelas FMIPA Universitas Riau.">
+        <title>{{ $page === 'register' ? 'Daftar akun' : 'Masuk' }} · {{ config('app.name') }}</title>
+        <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -15,14 +16,11 @@
     <body class="auth-page">
         <div class="auth-shell">
             <header class="auth-header">
-                <a class="auth-brand" href="{{ url('/') }}" aria-label="Ruang FMIPA, beranda">
+                <a class="auth-brand" href="{{ url('/') }}" aria-label="{{ config('app.name') }}, beranda">
                     <span class="auth-brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 32 32" fill="none">
-                            <path d="M7 25V7h18v18M4 25h24M13 25v-7h6v7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 12h2m4 0h2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                        </svg>
+                        <x-application-logo />
                     </span>
-                    <span class="auth-brand-name">RUANG<span>FMIPA UNIVERSITAS RIAU</span></span>
+                    <span class="auth-brand-name">{{ config('app.name') }}<span>FMIPA UNIVERSITAS RIAU</span></span>
                 </a>
                 <nav class="auth-nav" aria-label="Akses akun">
                     <a href="{{ route('login') }}" @class(['auth-nav-link', 'is-active' => $page === 'login']) @if ($page === 'login') aria-current="page" @endif>Masuk</a>
@@ -98,7 +96,7 @@
             </main>
 
             <footer class="auth-footer">
-                <p>© {{ now()->year }} FMIPA Universitas Riau</p>
+                <p>© {{ now()->year }} {{ config('app.name') }} · FMIPA Universitas Riau</p>
                 <span class="auth-footer-label"><span></span> Sistem Peminjaman Ruangan</span>
             </footer>
         </div>

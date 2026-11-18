@@ -75,8 +75,9 @@
                         @php
                             $startsAt = \Carbon\CarbonImmutable::parse($booking->starts_at);
                             $endsAt = \Carbon\CarbonImmutable::parse($booking->ends_at);
-                            $isPast = $endsAt->isPast();
-                            $canManage = in_array($booking->status, ['pending', 'approved']) && ! $isPast;
+                            $isPast = $endsAt->lte(now());
+                            $canManage = in_array($booking->status, ['pending', 'approved']) && ! $isPast
+                                && ($booking->lecture_schedule_id === null || $startsAt->gt(now()));
                         @endphp
                         <tr>
                             <td>

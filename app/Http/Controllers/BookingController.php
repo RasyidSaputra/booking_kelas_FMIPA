@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
 use App\Services\BookingManagement;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +12,6 @@ use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
         $bookings = DB::table('bookings')->join('rooms', 'rooms.id', '=', 'bookings.room_id')
@@ -42,28 +38,10 @@ class BookingController extends Controller
         return redirect()->route('bookings.index')->with('success', 'Pengajuan berhasil dibuat, silakan tunggu persetujuan Admin.');
     }
 
-    public function update(Request $request, int $booking): RedirectResponse
+    public function update(Request $request, int $booking, BookingManagement $management): RedirectResponse
     {
-        $item = DB::table('bookings')->where('id', $booking)->first();
-
-        if (! $item) {
-            abort(404, 'Booking tidak ditemukan.');
-        }
-
-        if ($item->user_id !== $request->user()->id) {
-            abort(403, 'Anda tidak memiliki hak akses untuk mengubah booking ini.');
-        }
-
-        if (! in_array($item->status, ['pending', 'approved'])) {
-            return back()->with('error', 'Booking dengan status ini tidak dapat direvisi.');
-        }
-
-        if (Carbon::parse($item->ends_at)->isPast()) {
-            return back()->with('error', 'Booking yang sudah selesai tidak dapat direvisi.');
-        }
-
         $validated = $request->validate([
-            'booking_date' => ['required', 'date', 'after_or_equal:today'],
+            'booking_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
             'start_time' => ['required', 'date_format:H:i', 'after_or_equal:07:30', 'before:18:00'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time', 'before_or_equal:18:00'],
             'purpose' => ['required', 'string', 'max:500'],
@@ -77,97 +55,38 @@ class BookingController extends Controller
             'purpose.required' => 'Tujuan peminjaman wajib diisi.',
         ]);
 
-        $startsAt = Carbon::parse("{$validated['booking_date']} {$validated['start_time']}");
-        $endsAt = Carbon::parse("{$validated['booking_date']} {$validated['end_time']}");
+        try {
+            $requiresApproval = $management->reviseForOwner($booking, $validated, $request->user()->id);
+        } catch (ValidationException $exception) {
+            if ($request->expectsJson()) {
+                throw $exception;
+            }
 
-        if ($startsAt->isPast()) {
-            return back()->withInput()->with('error', 'Waktu mulai peminjaman sudah lewat.');
+            return back()->withInput()->with('error', collect($exception->errors())->flatten()->first());
         }
 
-        $room = DB::table('rooms')->where('id', $item->room_id)->first();
-        if (! $room || ! $room->is_active) {
-            return back()->withInput()->with('error', 'Ruangan ini saat ini tidak aktif.');
-        }
-
-        $participantCount = $validated['participant_count'] ?? $item->participant_count;
-        if ($participantCount > $room->capacity) {
-            return back()->withInput()->with('error', "Jumlah peserta melebihi kapasitas ruangan ({$room->capacity} orang).");
-        }
-
-        // Pengecekan bentrok jadwal dengan booking lain yang berstatus 'approved'
-        $hasConflict = DB::table('bookings')
-            ->where('room_id', $item->room_id)
-            ->where('status', 'approved')
-            ->where('id', '!=', $item->id)
-            ->where(function ($query) use ($startsAt, $endsAt): void {
-                $query->where('starts_at', '<', $endsAt->toDateTimeString())
-                    ->where('ends_at', '>', $startsAt->toDateTimeString());
-            })
-            ->exists();
-
-        if ($hasConflict) {
-            return back()->withInput()->with('error', 'Maaf, ruangan sudah dipesan pada jam tersebut.');
-        }
-
-        $updateData = [
-            'purpose' => $validated['purpose'],
-            'participant_count' => $participantCount,
-            'starts_at' => $startsAt->toDateTimeString(),
-            'ends_at' => $endsAt->toDateTimeString(),
-            'updated_at' => now(),
-        ];
-
-        if ($item->status === 'approved') {
-            $updateData['status'] = 'pending';
-            $updateData['reviewed_by'] = null;
-            $updateData['reviewed_at'] = null;
-            $updateData['rejection_reason'] = null;
-            $successMessage = 'Waktu booking berhasil direvisi dan diajukan ulang untuk persetujuan Admin.';
-        } else {
-            $successMessage = 'Waktu booking berhasil direvisi.';
-        }
-
-        DB::table('bookings')->where('id', $item->id)->update($updateData);
-
-        return redirect()->route('bookings.index')->with('success', $successMessage);
+        return redirect()->route('bookings.index')->with('success', $requiresApproval
+            ? 'Waktu booking berhasil direvisi dan diajukan ulang untuk persetujuan Admin.'
+            : 'Waktu booking berhasil direvisi.');
     }
 
-    /**
-     * Cancel the specified booking.
-     */
-    public function cancel(Request $request, int $booking): RedirectResponse
+    public function cancel(Request $request, int $booking, BookingManagement $management): RedirectResponse
     {
-        $item = DB::table('bookings')->where('id', $booking)->first();
+        try {
+            $management->cancelForOwner($booking, $request->user()->id);
+        } catch (ValidationException $exception) {
+            if ($request->expectsJson()) {
+                throw $exception;
+            }
 
-        if (! $item) {
-            abort(404, 'Booking tidak ditemukan.');
+            return back()->with('error', collect($exception->errors())->flatten()->first());
         }
-
-        if ($item->user_id !== $request->user()->id) {
-            abort(403, 'Anda tidak memiliki hak akses untuk membatalkan booking ini.');
-        }
-
-        if (! in_array($item->status, ['pending', 'approved'])) {
-            return back()->with('error', 'Booking dengan status ini tidak dapat dibatalkan.');
-        }
-
-        if (Carbon::parse($item->ends_at)->isPast()) {
-            return back()->with('error', 'Booking yang sudah selesai tidak dapat dibatalkan.');
-        }
-
-        DB::table('bookings')->where('id', $item->id)->update([
-            'status' => 'cancelled',
-            'updated_at' => now(),
-        ]);
 
         return redirect()->route('bookings.index')->with('success', 'Booking berhasil dibatalkan.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Request $request, int $booking): RedirectResponse
+    public function destroy(Request $request, int $booking, BookingManagement $management): RedirectResponse
     {
-        return $this->cancel($request, $booking);
+        return $this->cancel($request, $booking, $management);
     }
 }

@@ -1,4 +1,4 @@
-# REST API Peminjaman Kelas FMIPA
+# REST API KelasKu
 
 API v1 menyediakan alur peminjaman dalam format JSON dengan database yang sama dengan web.
 
@@ -176,7 +176,7 @@ Login dibatasi 5 request per menit untuk kombinasi IP dan NIM/NIP serta 20 reque
 
 ## Menggunakan Postman
 
-1. Import `docs/postman/booking-kelas-fmipa.postman_collection.json`.
+1. Import `docs/postman/kelasku.postman_collection.json`.
 2. Atur variabel koleksi `base_url`, `identity_number`, `password`, `admin_identity_number`, dan `admin_password` sesuai akun yang sudah ada. `base_url` tidak memakai garis miring terakhir.
 3. Jalankan **Login pengguna**; skrip respons menyimpan `token` otomatis. **Login admin** menyimpan `admin_token` terpisah.
 4. Jalankan **Daftar ruangan**, lalu atur `room_id` ke ruangan aktif. Isi `booking_date` dengan tanggal mendatang; nilai contoh perlu disesuaikan.

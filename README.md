@@ -1,6 +1,8 @@
-# Peminjaman Kelas FMIPA Universitas Riau
+# KelasKu
 
-Aplikasi pengelolaan ruang kelas untuk **Fakultas Matematika dan Ilmu Pengetahuan Alam, Universitas Riau**. Pengguna dapat melihat ketersediaan ruangan, mengajukan peminjaman, dan memantau statusnya. Administrator mengelola data serta meninjau pengajuan.
+**KelasKu** adalah aplikasi peminjaman dan pengelolaan ruang kelas untuk **Fakultas Matematika dan Ilmu Pengetahuan Alam, Universitas Riau**. Pengguna dapat melihat ketersediaan ruangan, mengajukan peminjaman, dan memantau statusnya. Administrator mengelola data serta meninjau pengajuan.
+
+Nama aplikasi diatur melalui `APP_NAME=KelasKu` pada `.env`. Layout, judul browser, dan nama pengirim email mengikuti konfigurasi ini. Setelah mengubahnya, jalankan `php artisan config:clear` dan `npm.cmd run build` agar konfigurasi dan aset diperbarui.
 
 **Web Blade dan REST API menggunakan database serta aturan peminjaman yang sama.**
 
@@ -65,17 +67,17 @@ Buka **http://127.0.0.1:8001**. Perintah tersebut menjalankan server Laravel, qu
 
 Gunakan `npm.cmd` jika PowerShell memblokir `npm.ps1`. Script pengembangan tidak menjalankan Pail yang memerlukan PCNTL. Pada Laragon, arahkan document root ke folder `public` dan sesuaikan `APP_URL`.
 
-Port `8001` digunakan khusus proyek FMIPA agar tidak bertabrakan dengan proyek lain pada port `8000`. Setelah memperbarui konfigurasi ini, hentikan proses pengembangan lama dengan `Ctrl+C`, kemudian jalankan kembali `composer run dev`. Buka URL yang ditampilkan oleh proses **server**, bukan URL Vite.
+Port `8001` digunakan khusus KelasKu agar tidak bertabrakan dengan proyek lain pada port `8000`. Setelah memperbarui konfigurasi ini, hentikan proses pengembangan lama dengan `Ctrl+C`, kemudian jalankan kembali `composer run dev`. Buka URL yang ditampilkan oleh proses **server**, bukan URL Vite.
 
 ### MySQL
 
-Buat database `booking_kelas_fmipa`, kemudian atur `.env`:
+Buat database `kelasku` untuk instalasi baru, kemudian atur `.env`. Untuk instalasi yang sudah ada, tetap gunakan nama database yang berisi data aplikasi:
 
 ```dotenv
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=booking_kelas_fmipa
+DB_DATABASE=kelasku
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -87,7 +89,7 @@ Jalankan `php artisan config:clear`, lalu `php artisan migrate`.
 Base URL lokal: **`http://127.0.0.1:8001/api/v1`**.
 
 - [Panduan endpoint, autentikasi, dan contoh request](docs/API.md)
-- [Koleksi Postman yang dapat diimpor](docs/postman/booking-kelas-fmipa.postman_collection.json)
+- [Koleksi Postman yang dapat diimpor](docs/postman/kelasku.postman_collection.json)
 
 Gunakan akun terdaftar yang sama dengan web. Login menggunakan `identity_number` (NIM/NIP), `password`, dan `device_name`. Registrasi pengguna baru dilakukan melalui web; akun admin dikelola sesuai mekanisme proyek.
 

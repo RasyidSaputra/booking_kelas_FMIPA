@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Peminjaman Kelas FMIPA - API v1",
+    "name": "KelasKu - API v1",
     "description": "Isi kredensial akun yang sudah terdaftar. Jalankan login terlebih dahulu; atur room_id dan booking_date. Persetujuan/penolakan mengubah data nyata. Kedua keputusan adalah alternatif untuk pengajuan pending, bukan urutan yang dijalankan bersamaan.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

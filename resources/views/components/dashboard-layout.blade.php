@@ -5,7 +5,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ $title }} · Ruang FMIPA</title>
+        <title>{{ $title }} · {{ config('app.name') }}</title>
+        <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -16,9 +17,9 @@
             <header class="dash-topbar">
                 <div class="dash-topbar-brand">
                     <button type="button" class="dash-icon-button dash-menu-toggle" x-on:click="sidebarOpen = !sidebarOpen" x-bind:aria-expanded="sidebarOpen.toString()" aria-expanded="false" aria-label="Buka atau tutup menu" aria-controls="dashboard-sidebar"><x-dashboard-icon name="menu" /></button>
-                    <a href="{{ route('dashboard') }}" class="dash-brand" aria-label="Ruang FMIPA, dashboard">
-                        <x-application-logo class="dash-laravel-logo" />
-                        <span>RUANG<small>FMIPA UNIVERSITAS RIAU</small></span>
+                    <a href="{{ route('dashboard') }}" class="dash-brand" aria-label="{{ config('app.name') }}, dashboard">
+                        <x-application-logo class="dash-brand-logo" />
+                        <span>{{ config('app.name') }}<small>FMIPA UNIVERSITAS RIAU</small></span>
                     </a>
                 </div>
                 <form method="GET" action="{{ route('rooms.index') }}" class="dash-search" role="search">
@@ -57,7 +58,7 @@
                 <div class="dash-sidebar-bottom">
                     <div class="dash-sidebar-tip"><span class="dash-tip-icon"><x-dashboard-icon name="calendar" /></span><strong>Rencanakan lebih awal.</strong><p>Cek jadwal ruangan sebelum mengajukan kegiatan Anda.</p><a href="{{ route('dashboard') }}#calendar">Lihat kalender <span aria-hidden="true">↗</span></a></div>
                     <a href="{{ route('profile.edit') }}" @class(['dash-nav-item', 'is-active' => request()->routeIs('profile.*')]) @if(request()->routeIs('profile.*')) aria-current="page" @endif><x-dashboard-icon name="user" /><span>Pengaturan profil</span></a>
-                    <p class="dash-sidebar-footer">Ruang untuk kegiatan bersama.<br>© {{ now()->year }} FMIPA UNRI</p>
+                    <p class="dash-sidebar-footer">Ruang untuk kegiatan bersama.<br>© {{ now()->year }} {{ config('app.name') }} · FMIPA UNRI</p>
                 </div>
             </aside>
 
