@@ -29,7 +29,7 @@
                     <button type="submit">Cari <span aria-hidden="true">↗</span></button>
                 </form>
                 <details class="dash-account">
-                    <summary><span class="dash-avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span><span class="dash-account-name">{{ auth()->user()->name }}<small>{{ auth()->user()->roleLabel() }}</small></span><x-dashboard-icon name="chevron-down" /></summary>
+                    <summary><span class="dash-avatar" style="overflow:hidden;">@if (auth()->user()->avatarUrl())<img src="{{ auth()->user()->avatarUrl() }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">@else{{ auth()->user()->initial() }}@endif</span><span class="dash-account-name">{{ auth()->user()->name }}<small>{{ auth()->user()->roleLabel() }}</small></span><x-dashboard-icon name="chevron-down" /></summary>
                     <div class="dash-account-menu">
                         <a href="{{ route('profile.edit') }}"><x-dashboard-icon name="user" /> Profil saya</a>
                         <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit"><x-dashboard-icon name="logout" /> Keluar</button></form>

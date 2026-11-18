@@ -1,7 +1,7 @@
 <section id="profile-information" class="profile-card" aria-labelledby="profile-information-title">
     <header class="profile-card-heading">
         <span class="profile-section-icon"><x-dashboard-icon name="user" /></span>
-        <div><h2 id="profile-information-title">Informasi profil</h2><p>Perbarui nama, identitas, dan alamat email Anda.</p></div>
+        <div><h2 id="profile-information-title">Informasi profil</h2><p>Perbarui foto, nama, identitas, dan alamat email Anda.</p></div>
     </header>
 
     @if(session('status') === 'profile-updated')
@@ -14,9 +14,44 @@
 
     <form id="send-verification" method="POST" action="{{ route('verification.send') }}">@csrf</form>
 
-    <form method="POST" action="{{ route('profile.update') }}" class="profile-form" x-data="{ submitting: false }" x-on:submit="submitting = true">
+    <form method="POST" action="{{ route('profile.update') }}" class="profile-form" enctype="multipart/form-data"
+          x-data="{ submitting: false, preview: null, removing: false, fileError: null, hasPhoto: {{ $user->avatarUrl() ? 'true' : 'false' }},
+              pick(e) {
+                  const f = e.target.files[0];
+                  this.fileError = null;
+                  if (!f) { this.preview = null; return; }
+                  if (!['image/jpeg','image/png','image/webp'].includes(f.type)) { this.fileError = 'Foto harus berupa JPG, PNG, atau WebP.'; e.target.value = ''; this.preview = null; return; }
+                  if (f.size > 2 * 1024 * 1024) { this.fileError = 'Ukuran foto maksimal 2 MB.'; e.target.value = ''; this.preview = null; return; }
+                  this.removing = false;
+                  this.preview = URL.createObjectURL(f);
+              },
+              clear() { this.$refs.avatar.value = ''; this.preview = null; this.fileError = null; }
+          }"
+          x-on:submit="submitting = true">
         @csrf
         @method('PATCH')
+
+        <div class="profile-photo-field">
+            <span class="profile-photo-preview">
+                <template x-if="preview"><img x-bind:src="preview" alt="Pratinjau foto baru"></template>
+                <template x-if="!preview && hasPhoto && !removing"><img src="{{ $user->avatarUrl() }}" alt="Foto profil saat ini"></template>
+                <template x-if="!preview && (!hasPhoto || removing)"><span class="profile-photo-initial">{{ $user->initial() }}</span></template>
+            </span>
+            <div class="profile-photo-body">
+                <label for="avatar" class="profile-photo-label">Foto profil</label>
+                <div class="profile-photo-actions">
+                    <label for="avatar" class="dash-button profile-photo-button"><x-dashboard-icon name="user" /><span x-text="hasPhoto || preview ? 'Ganti foto' : 'Unggah foto'">Unggah foto</span></label>
+                    <input id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" class="dash-sr-only" x-ref="avatar" x-on:change="pick($event)" aria-describedby="avatar-hint">
+                    <button type="button" class="dash-text-link" x-show="preview" x-cloak x-on:click="clear()">Batalkan pilihan</button>
+                    <label class="profile-photo-remove" x-show="hasPhoto && !preview" x-cloak>
+                        <input type="checkbox" name="remove_avatar" value="1" x-model="removing"> Hapus foto saat ini
+                    </label>
+                </div>
+                <p id="avatar-hint" class="profile-field-hint">JPG, PNG, atau WebP. Maksimal 2 MB.</p>
+                <p class="profile-field-error" role="alert" x-show="fileError" x-cloak x-text="fileError"></p>
+                @error('avatar')<div class="profile-field-error" role="alert"><x-input-error :messages="$errors->get('avatar')" /></div>@enderror
+            </div>
+        </div>
 
         <x-profile-field name="name" label="Nama lengkap" :value="$user->name" placeholder="Nama sesuai identitas Anda" required autocomplete="name" maxlength="255" />
 

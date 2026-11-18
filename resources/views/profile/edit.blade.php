@@ -15,7 +15,7 @@
     <div class="profile-layout">
         <aside class="profile-summary" aria-labelledby="profile-summary-title">
             <div class="profile-summary-top">
-                <span class="profile-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span>
+                <span class="profile-avatar" aria-hidden="true" style="overflow:hidden;">@if ($user->avatarUrl())<img src="{{ $user->avatarUrl() }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">@else{{ $user->initial() }}@endif</span>
                 <h2 id="profile-summary-title">{{ $user->name }}</h2>
                 <p class="profile-summary-email">{{ $user->email }}</p>
                 <span class="profile-role-badge"><x-dashboard-icon name="shield" />{{ $user->roleLabel() }}</span>

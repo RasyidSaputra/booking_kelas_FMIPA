@@ -37,6 +37,8 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_avatar' => ['sometimes', 'boolean'],
             'role' => ['prohibited'],
         ];
     }
@@ -47,6 +49,7 @@ class ProfileUpdateRequest extends FormRequest
             'name' => 'Nama lengkap',
             'identity_number' => 'NIM / NIP',
             'email' => 'Alamat email',
+            'avatar' => 'Foto profil',
         ];
     }
 
@@ -60,6 +63,10 @@ class ProfileUpdateRequest extends FormRequest
             'email.unique' => 'Alamat email ini sudah digunakan akun lain.',
             'email.email' => 'Masukkan alamat email yang valid.',
             'email.lowercase' => 'Gunakan huruf kecil pada alamat email.',
+            'avatar.image' => 'Foto profil harus berupa gambar.',
+            'avatar.mimes' => 'Foto profil harus berupa JPG, PNG, atau WebP.',
+            'avatar.max' => 'Ukuran foto profil maksimal 2 MB.',
+            'avatar.uploaded' => 'Foto profil gagal diunggah. Coba lagi dengan file yang lebih kecil.',
             'role.prohibited' => 'Role akun tidak dapat diubah melalui pengaturan profil.',
         ];
     }

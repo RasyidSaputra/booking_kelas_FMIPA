@@ -186,7 +186,9 @@
     border-radius: 50%;
     font-size: 14px;
     font-weight: 700;
+    overflow: hidden;
 }
+.dash-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dash-account-name {
     max-width: 140px;
     overflow: hidden;

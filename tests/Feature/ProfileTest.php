@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -225,5 +227,80 @@ class ProfileTest extends TestCase
             'ends_at' => '2026-10-26 09:00:00', 'status' => 'approved',
             'reviewed_by' => $reviewer?->id, 'created_at' => now(), 'updated_at' => now(),
         ]);
+    }
+    private function profileData(User $user, array $extra = []): array
+    {
+        return array_merge(['name' => $user->name, 'identity_number' => $user->identity_number ?? '123', 'email' => $user->email], $extra);
+    }
+
+    public function test_avatar_can_be_uploaded_and_is_shown(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['identity_number' => '123']);
+
+        $this->actingAs($user)
+            ->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->image('foto.png', 300, 300)]))
+            ->assertSessionHasNoErrors()->assertRedirect('/profile');
+
+        $user->refresh();
+        $this->assertNotNull($user->avatar_path);
+        $this->assertStringStartsWith('avatars/', $user->avatar_path);
+        Storage::disk('public')->assertExists($user->avatar_path);
+        $this->actingAs($user)->get('/profile')->assertOk()->assertSee($user->avatarUrl(), false);
+    }
+
+    public function test_replacing_avatar_deletes_the_old_file(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['identity_number' => '123']);
+        $this->actingAs($user)->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->image('a.jpg')]));
+        $old = $user->fresh()->avatar_path;
+
+        $this->actingAs($user)->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->image('b.jpg')]));
+
+        $new = $user->fresh()->avatar_path;
+        $this->assertNotSame($old, $new);
+        Storage::disk('public')->assertMissing($old);
+        Storage::disk('public')->assertExists($new);
+    }
+
+    public function test_avatar_can_be_removed(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['identity_number' => '123']);
+        $this->actingAs($user)->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->image('a.jpg')]));
+        $path = $user->fresh()->avatar_path;
+
+        $this->actingAs($user)->patch('/profile', $this->profileData($user, ['remove_avatar' => '1']))->assertSessionHasNoErrors();
+
+        $this->assertNull($user->fresh()->avatar_path);
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_avatar_is_kept_when_other_fields_are_updated(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['identity_number' => '123']);
+        $this->actingAs($user)->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->image('a.jpg')]));
+        $path = $user->fresh()->avatar_path;
+
+        $this->actingAs($user)->patch('/profile', $this->profileData($user, ['name' => 'Nama Baru']))->assertSessionHasNoErrors();
+
+        $this->assertSame($path, $user->fresh()->avatar_path);
+    }
+
+    public function test_invalid_avatar_is_rejected(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['identity_number' => '123']);
+
+        $this->actingAs($user)
+            ->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf')]))
+            ->assertSessionHasErrors('avatar');
+        $this->actingAs($user)
+            ->patch('/profile', $this->profileData($user, ['avatar' => UploadedFile::fake()->image('besar.png')->size(3000)]))
+            ->assertSessionHasErrors('avatar');
+
+        $this->assertNull($user->fresh()->avatar_path);
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -28,13 +29,42 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->safe()->only(['name', 'identity_number', 'email']));
+        $user = $request->user();
+        $user->fill($request->safe()->only(['name', 'identity_number', 'email']));
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $oldAvatar = null;
+
+        if ($request->hasFile('avatar')) {
+            $newAvatar = $request->file('avatar')->store('avatars', 'public');
+
+            if (! $newAvatar) {
+                throw ValidationException::withMessages(['avatar' => 'Foto profil belum dapat disimpan. Coba kembali.']);
+            }
+
+            $oldAvatar = $user->avatar_path;
+            $user->avatar_path = $newAvatar;
+        } elseif ($request->boolean('remove_avatar')) {
+            $oldAvatar = $user->avatar_path;
+            $user->avatar_path = null;
+        }
+
+        try {
+            $user->save();
+        } catch (\Throwable $e) {
+            if (isset($newAvatar) && $newAvatar) {
+                Storage::disk('public')->delete($newAvatar);
+            }
+
+            throw $e;
+        }
+
+        if ($oldAvatar) {
+            Storage::disk('public')->delete($oldAvatar);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -62,7 +92,12 @@ class ProfileController extends Controller
 
         Auth::logout();
 
+        $avatar = $user->avatar_path;
         $user->delete();
+
+        if ($avatar) {
+            Storage::disk('public')->delete($avatar);
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

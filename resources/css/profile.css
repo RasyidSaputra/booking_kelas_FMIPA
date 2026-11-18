@@ -163,3 +163,15 @@
     .profile-role-info { padding: 13px 11px; }
     .profile-delete-button { width: 100%; text-align: center; }
 }
+
+/* Foto profil */
+.profile-photo-field{display:flex;align-items:center;gap:20px;padding:4px 0 24px;margin-bottom:8px;border-bottom:1px solid #e5ecee}
+.profile-photo-field [hidden]{display:none !important}
+.profile-photo-preview{position:relative;flex:0 0 auto;width:88px;height:88px;border-radius:50%;overflow:hidden;background:#e2f3ef;display:grid;place-items:center;border:4px solid #fff;box-shadow:0 0 0 1px #d7e6e3}
+.profile-photo-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-photo-initial{font-size:32px;font-weight:700;color:#0f8b7a}
+.profile-photo-body{flex:1;min-width:0}
+.profile-photo-label{display:block;font-weight:600;color:#0a3a4a;margin-bottom:10px}
+.profile-photo-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.profile-photo-button{cursor:pointer}
+.profile-photo-remove{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:#5b6f76;cursor:pointer}
