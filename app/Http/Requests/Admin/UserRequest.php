@@ -5,8 +5,16 @@ namespace App\Http\Requests\Admin;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * Memvalidasi akun, role, identitas unik, serta kata sandi dari formulir admin.
+ * Konsep Laravel: Form Request, Unique Rule dan Password Validation.
+ */
 class UserRequest extends MasterRequest
 {
+    /**
+     * Menetapkan aturan validasi identitas akun unik, role, dan konfirmasi kata sandi.
+     * Konsep Laravel: Form Request Validation, rules().
+     */
     public function rules(): array
     {
         $user = $this->route('user');

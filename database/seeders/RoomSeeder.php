@@ -5,10 +5,15 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Menyiapkan ruangan contoh untuk simulasi peminjaman.
+ * Konsep Laravel: Database Seeder, Query Builder / Eloquent untuk data contoh.
+ */
 class RoomSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Menyiapkan ruangan contoh untuk simulasi peminjaman.
+     * Konsep Laravel: Database Seeder, Query Builder / Eloquent untuk data contoh.
      */
     public function run(): void
     {

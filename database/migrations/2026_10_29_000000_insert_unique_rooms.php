@@ -3,8 +3,16 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Menambahkan ruangan yang belum ada berdasarkan kode atau nama tanpa mengubah data ruangan lama.
+ * Konsep Laravel: Data Migration (anonymous class) dan Query Builder.
+ */
 return new class extends Migration
 {
+    /**
+     * Menambahkan ruangan yang belum ada berdasarkan kode atau nama tanpa mengubah data ruangan lama.
+     * Konsep Laravel: Data Migration, Query Builder dan pemeriksaan duplikat.
+     */
     public function up(): void
     {
         $rooms = [
@@ -54,6 +62,10 @@ return new class extends Migration
         }
     }
 
+    /**
+     * Mempertahankan data ruangan saat rollback agar pembaruan master dan riwayat tidak hilang.
+     * Konsep Laravel: Database Migration, Rollback melalui down().
+     */
     public function down(): void
     {
         // Data master dipertahankan karena dapat sudah diperbarui atau memiliki

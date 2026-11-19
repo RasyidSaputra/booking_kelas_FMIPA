@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Booking Detail pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class BookingDetailTest extends TestCase
 {
     use RefreshDatabase;
@@ -17,6 +21,10 @@ class BookingDetailTest extends TestCase
 
     private int $bookingId;
 
+    /**
+     * Menyiapkan akun, ruangan, atau data awal yang diperlukan sebelum setiap skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -35,11 +43,19 @@ class BookingDetailTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan tamu harus login sebelum melihat detail booking.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_guest_must_log_in(): void
     {
         $this->get(route('bookings.show', $this->bookingId))->assertRedirect(route('login'));
     }
 
+    /**
+     * Memastikan pemilik dapat membuka dan membaca detail booking dari daftar miliknya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_owner_can_read_details_and_open_them_from_the_list(): void
     {
         $this->actingAs($this->owner)->get(route('bookings.index'))
@@ -49,6 +65,10 @@ class BookingDetailTest extends TestCase
             ->assertSeeText('Silakan menunggu proses persetujuan.');
     }
 
+    /**
+     * Memastikan pengguna lain tidak dapat membaca detail booking yang bersifat pribadi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     #[DataProvider('nonAdminRoles')]
     public function test_other_users_cannot_read_private_booking_details(string $role): void
     {
@@ -57,11 +77,19 @@ class BookingDetailTest extends TestCase
             ->assertDontSeeText('Diskusi detail pengajuan');
     }
 
+    /**
+     * Menyediakan variasi role non-admin bagi pengujian otorisasi.
+     * Konsep Laravel: PHPUnit Data Provider untuk Feature Test.
+     */
     public static function nonAdminRoles(): array
     {
         return [['mahasiswa'], ['dosen']];
     }
 
+    /**
+     * Memastikan admin dapat membuka booking pengguna lain dan kembali ke daftar pengajuan admin.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_can_open_another_users_booking_and_return_to_admin_list(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']))
@@ -70,6 +98,10 @@ class BookingDetailTest extends TestCase
             ->assertSee('href="'.route('admin.rooms.index', ['tab' => 'bookings']).'"', false);
     }
 
+    /**
+     * Memastikan daftar admin menyediakan tautan menuju detail booking.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_list_links_to_booking_details(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']))
@@ -77,12 +109,20 @@ class BookingDetailTest extends TestCase
             ->assertSee('href="'.route('bookings.show', $this->bookingId).'"', false);
     }
 
+    /**
+     * Memastikan identitas booking yang tidak ada atau tidak valid menghasilkan HTTP 404.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_missing_and_invalid_booking_ids_return_not_found(): void
     {
         $this->actingAs($this->owner)->get('/bookings/999999')->assertNotFound();
         $this->get('/bookings/not-a-number')->assertNotFound();
     }
 
+    /**
+     * Memastikan booking ditolak menampilkan pemeriksa, waktu, dan alasan yang di-escape.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_rejected_booking_shows_reviewer_time_and_escaped_reason(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'name' => 'Admin Pemeriksa Detail']);
@@ -97,6 +137,10 @@ class BookingDetailTest extends TestCase
             ->assertDontSeeText('Silakan menunggu proses persetujuan.');
     }
 
+    /**
+     * Memastikan pengajuan pending yang dibatalkan tidak lagi meminta pemilik menunggu persetujuan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_cancelled_pending_booking_no_longer_asks_owner_to_wait_for_approval(): void
     {
         $this->actingAs($this->owner)->patch(route('bookings.cancel', $this->bookingId))
@@ -106,6 +150,10 @@ class BookingDetailTest extends TestCase
             ->assertDontSeeText('Silakan menunggu proses persetujuan.');
     }
 
+    /**
+     * Memastikan booking disetujui tanpa metadata pemeriksaan tidak meminta pemilik menunggu.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_approved_booking_without_review_metadata_does_not_ask_owner_to_wait(): void
     {
         DB::table('bookings')->where('id', $this->bookingId)->update(['status' => 'approved']);
@@ -113,6 +161,10 @@ class BookingDetailTest extends TestCase
             ->assertSeeText('Disetujui')->assertDontSeeText('Silakan menunggu proses persetujuan.');
     }
 
+    /**
+     * Memastikan booking lintas hari menampilkan tanggal mulai dan tanggal selesai.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_multi_day_booking_displays_both_dates(): void
     {
         DB::table('bookings')->where('id', $this->bookingId)->update(['ends_at' => '2026-12-22 10:00:00']);

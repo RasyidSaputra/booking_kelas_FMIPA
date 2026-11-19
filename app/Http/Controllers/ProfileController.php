@@ -13,10 +13,15 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Mengelola profil, avatar, serta penghapusan akun milik pengguna yang masuk.
+ * Konsep Laravel: Controller (MVC), Authentication, Eloquent dan Filesystem.
+ */
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Menampilkan formulir profil untuk akun yang sedang terautentikasi.
+     * Konsep Laravel: Controller (MVC), Authentication, Eloquent dan Filesystem.
      */
     public function edit(Request $request): View
     {
@@ -26,7 +31,8 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Memperbarui kolom profil yang diizinkan dan mengganti avatar dengan transaksi serta pembersihan berkas lama.
+     * Konsep Laravel: Controller (MVC), Authentication, Eloquent dan Filesystem.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -77,7 +83,8 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Memeriksa kata sandi dan riwayat sebelum menghapus akun, membersihkan avatar, serta mengakhiri sesi.
+     * Konsep Laravel: Controller (MVC), Authentication, Eloquent dan Filesystem.
      */
     public function destroy(Request $request): RedirectResponse
     {

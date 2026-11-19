@@ -5,9 +5,17 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\RoomController;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Mengelompokkan endpoint API versi pertama beserta nama route-nya.
+ * Konsep Laravel: API Routing, Route Prefix dan Named Route Group.
+ */
 Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:api-login')->name('login');
 
+    /**
+     * Melindungi endpoint API dengan autentikasi Sanctum, verifikasi, dan pembatasan laju request.
+     * Konsep Laravel: Route Group, Sanctum Middleware dan Rate Limiting.
+     */
     Route::middleware(['auth:sanctum', 'verified', 'throttle:api'])->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('me');
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
@@ -18,6 +26,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
         Route::get('bookings/{booking}', [BookingController::class, 'show'])->whereNumber('booking')->name('bookings.show');
 
+        /**
+         * Membatasi daftar seluruh pengajuan dan pemeriksaan API untuk administrator.
+         * Konsep Laravel: Nested Route Group dan Gate Authorization.
+         */
         Route::prefix('admin')->name('admin.')->middleware('can:view-room-master')->group(function () {
             Route::get('bookings', [BookingController::class, 'adminIndex'])->name('bookings.index');
             Route::patch('bookings/{booking}/review', [BookingController::class, 'review'])->whereNumber('booking')->name('bookings.review');

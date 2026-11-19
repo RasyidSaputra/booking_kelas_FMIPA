@@ -6,10 +6,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Room Data Migration pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class RoomDataMigrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan migration menambahkan 15 ruangan unik dan aman dijalankan ulang.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_migration_adds_fifteen_unique_rooms_and_can_run_again(): void
     {
         $this->assertDatabaseCount('rooms', 15);
@@ -24,6 +32,10 @@ class RoomDataMigrationTest extends TestCase
         $this->assertDatabaseCount('rooms', 15);
     }
 
+    /**
+     * Memastikan ruangan lama dipertahankan dan dicocokkan berdasarkan kode atau nama yang dinormalisasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_existing_rooms_are_preserved_and_matched_by_code_or_normalized_name(): void
     {
         DB::table('rooms')->delete();

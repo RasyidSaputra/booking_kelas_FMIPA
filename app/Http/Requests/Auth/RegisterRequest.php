@@ -7,14 +7,25 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules;
 
+/**
+ * Memvalidasi data pendaftaran akun sebelum controller menyimpan pengguna baru.
+ * Konsep Laravel: Form Request, Validation dan Unique Rule.
+ */
 class RegisterRequest extends FormRequest
 {
+    /**
+     * Mengizinkan validasi request dilanjutkan; pembatasan akses lainnya mengikuti middleware route.
+     * Konsep Laravel: Form Request Authorization, authorize().
+     */
     public function authorize(): bool
     {
         return true;
     }
 
     /**
+     * Menetapkan aturan validasi identitas akun unik dan konfirmasi kata sandi saat registrasi.
+     * Konsep Laravel: Form Request Validation, rules().
+     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
@@ -27,6 +38,10 @@ class RegisterRequest extends FormRequest
         ];
     }
 
+    /**
+     * Menyediakan label kolom dalam bahasa Indonesia untuk pesan kesalahan validasi.
+     * Konsep Laravel: Form Request, custom validation attributes.
+     */
     public function attributes(): array
     {
         return [
@@ -37,6 +52,10 @@ class RegisterRequest extends FormRequest
         ];
     }
 
+    /**
+     * Menyediakan pesan kesalahan validasi dalam bahasa Indonesia.
+     * Konsep Laravel: Form Request, custom validation messages.
+     */
     public function messages(): array
     {
         return [

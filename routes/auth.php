@@ -11,6 +11,10 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Mendaftarkan login, registrasi, dan reset kata sandi bagi pengguna yang belum masuk.
+ * Konsep Laravel: Route Group dan Guest Middleware.
+ */
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
@@ -35,6 +39,10 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
+/**
+ * Mendaftarkan verifikasi email, konfirmasi kata sandi, perubahan kata sandi, dan logout bagi pengguna masuk.
+ * Konsep Laravel: Route Group dan Authentication Middleware.
+ */
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');

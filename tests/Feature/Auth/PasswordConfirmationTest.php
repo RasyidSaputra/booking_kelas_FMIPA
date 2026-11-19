@@ -6,10 +6,18 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Password Confirmation pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class PasswordConfirmationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan halaman konfirmasi kata sandi dapat ditampilkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_confirm_password_screen_can_be_rendered(): void
     {
         $user = User::factory()->create();
@@ -19,6 +27,10 @@ class PasswordConfirmationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * Memastikan kata sandi yang benar dapat dikonfirmasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_password_can_be_confirmed(): void
     {
         $user = User::factory()->create();
@@ -31,6 +43,10 @@ class PasswordConfirmationTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
+    /**
+     * Memastikan kata sandi salah tidak dianggap terkonfirmasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_password_is_not_confirmed_with_invalid_password(): void
     {
         $user = User::factory()->create();

@@ -11,10 +11,18 @@ use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Avatar pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class AvatarTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Membuat atau mengambil akun pemilik avatar untuk kebutuhan pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function owner(): User
     {
         Storage::fake('public');
@@ -26,11 +34,19 @@ class AvatarTest extends TestCase
         return $owner;
     }
 
+    /**
+     * Menyediakan data dasar formulir dan menggabungkan penyesuaian untuk skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function data(User $owner, array $extra = []): array
     {
         return $extra + ['name' => $owner->name, 'email' => $owner->email, 'identity_number' => $owner->identity_number];
     }
 
+    /**
+     * Memastikan URL avatar mengikuti konfigurasi disk public.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_avatar_url_follows_the_public_disk_configuration(): void
     {
         config(['filesystems.disks.public.url' => 'https://assets.example.test/kelasku/storage']);
@@ -41,6 +57,10 @@ class AvatarTest extends TestCase
         $this->assertSame('https://assets.example.test/kelasku/storage/avatars/photo.png', $owner->avatarUrl());
     }
 
+    /**
+     * Memastikan penghapusan akun oleh admin juga membersihkan avatar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_deleting_an_account_removes_its_avatar(): void
     {
         $owner = $this->owner();
@@ -52,6 +72,10 @@ class AvatarTest extends TestCase
         Storage::disk('public')->assertMissing($owner->avatar_path);
     }
 
+    /**
+     * Memastikan penolakan penghapusan akun tetap mempertahankan avatar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_rejected_account_deletion_keeps_its_avatar(): void
     {
         $owner = $this->owner();
@@ -63,6 +87,10 @@ class AvatarTest extends TestCase
         Storage::disk('public')->assertExists($owner->avatar_path);
     }
 
+    /**
+     * Memastikan request profil dengan data lama membersihkan avatar terbaru yang digantikan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_stale_profile_requests_clean_up_the_latest_replaced_avatar(): void
     {
         $owner = $this->owner();
@@ -81,6 +109,10 @@ class AvatarTest extends TestCase
         $this->assertCount(1, Storage::disk('public')->allFiles('avatars'));
     }
 
+    /**
+     * Memastikan permintaan hapus dengan data lama menghapus avatar yang sedang tersimpan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_stale_remove_request_deletes_the_current_avatar(): void
     {
         $owner = $this->owner();
@@ -96,6 +128,10 @@ class AvatarTest extends TestCase
         $this->assertSame([], Storage::disk('public')->allFiles('avatars'));
     }
 
+    /**
+     * Memastikan penghapusan akun sendiri menggunakan avatar terbaru.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_self_deletion_uses_the_latest_avatar(): void
     {
         $owner = $this->owner();
@@ -110,6 +146,10 @@ class AvatarTest extends TestCase
         $this->assertSame([], Storage::disk('public')->allFiles('avatars'));
     }
 
+    /**
+     * Memastikan kegagalan penyimpanan database menjaga avatar lama dan membersihkan unggahan baru.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_failed_database_save_keeps_the_original_avatar_and_cleans_the_new_upload(): void
     {
         $owner = $this->owner();
@@ -134,6 +174,10 @@ class AvatarTest extends TestCase
         $this->assertSame(['avatars/original.png'], Storage::disk('public')->allFiles('avatars'));
     }
 
+    /**
+     * Memastikan rollback penghapusan akun oleh admin tidak menghapus berkas avatar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_rollback_of_admin_deletion_does_not_delete_the_avatar_file(): void
     {
         $owner = $this->owner();

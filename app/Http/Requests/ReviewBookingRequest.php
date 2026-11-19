@@ -5,10 +5,15 @@ namespace App\Http\Requests;
 use App\Http\Requests\Admin\MasterRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Memvalidasi keputusan administrator dan mewajibkan alasan saat pengajuan ditolak.
+ * Konsep Laravel: Form Request, pewarisan MasterRequest dan Conditional Validation.
+ */
 class ReviewBookingRequest extends MasterRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Menetapkan aturan validasi keputusan pemeriksaan dan alasan penolakan bersyarat.
+     * Konsep Laravel: Form Request Validation, rules().
      *
      * @return array<string, array>
      */

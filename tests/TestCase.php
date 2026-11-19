@@ -6,8 +6,16 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use RuntimeException;
 
+/**
+ * Menjadi dasar pengujian dengan pengaman database SQLite dalam memori.
+ * Konsep Laravel: Laravel Testing, Test Lifecycle dan Test Environment.
+ */
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * Menyiapkan aplikasi pengujian dan menghentikan tes jika database bukan SQLite dalam memori.
+     * Konsep Laravel: Laravel Testing, Test Lifecycle dan Test Environment.
+     */
     public function createApplication(): Application
     {
         $app = parent::createApplication();

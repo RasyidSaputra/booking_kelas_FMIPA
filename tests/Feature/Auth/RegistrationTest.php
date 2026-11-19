@@ -7,10 +7,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Registration pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan halaman registrasi dapat ditampilkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_registration_screen_can_be_rendered(): void
     {
         $response = $this->get('/register');
@@ -18,6 +26,10 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * Memastikan pengguna baru dapat mendaftar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_new_users_can_register(): void
     {
         $response = $this->post('/register', [
@@ -38,6 +50,10 @@ class RegistrationTest extends TestCase
         $this->assertTrue(Hash::check('password', User::where('email', 'test@example.com')->firstOrFail()->password));
     }
 
+    /**
+     * Memastikan registrasi publik tidak dapat membuat akun admin.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_public_registration_cannot_create_an_admin(): void
     {
         $response = $this->post('/register', [
@@ -53,6 +69,10 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'test@example.com', 'role' => 'mahasiswa']);
     }
 
+    /**
+     * Memastikan registrasi publik tidak dapat memilih role dosen.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_public_registration_cannot_choose_a_lecturer_role(): void
     {
         $response = $this->post('/register', [
@@ -68,6 +88,10 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'test@example.com', 'role' => 'mahasiswa']);
     }
 
+    /**
+     * Memastikan registrasi mewajibkan NIM/NIP.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_registration_requires_an_identity_number(): void
     {
         $response = $this->post('/register', [
@@ -82,6 +106,10 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
     }
 
+    /**
+     * Memastikan registrasi menolak identitas yang sudah digunakan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_registration_rejects_a_duplicate_identity_number(): void
     {
         User::factory()->create(['identity_number' => '00123456789']);
@@ -99,6 +127,10 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'another@example.com']);
     }
 
+    /**
+     * Memastikan registrasi menolak konfirmasi kata sandi yang berbeda.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_registration_rejects_mismatched_password_confirmation(): void
     {
         $response = $this->post('/register', [

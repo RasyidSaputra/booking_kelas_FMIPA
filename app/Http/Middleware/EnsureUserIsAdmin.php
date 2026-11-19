@@ -6,10 +6,15 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Menyiapkan middleware admin, tetapi saat ini hanya meneruskan request tanpa memeriksa role.
+ * Konsep Laravel: HTTP Middleware; pembatasan admin aktif menggunakan Gate pada route.
+ */
 class EnsureUserIsAdmin
 {
     /**
-     * Handle an incoming request.
+     * Meneruskan request ke middleware berikutnya; belum memeriksa apakah pengguna adalah admin.
+     * Konsep Laravel: HTTP Middleware, request pipeline dan Closure $next.
      *
      * @param  Closure(Request): (Response)  $next
      */

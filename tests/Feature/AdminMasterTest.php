@@ -11,12 +11,20 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Admin Master pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class AdminMasterTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $admin;
 
+    /**
+     * Menyiapkan akun, ruangan, atau data awal yang diperlukan sebelum setiap skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,6 +32,10 @@ class AdminMasterTest extends TestCase
         $this->actingAs($this->admin);
     }
 
+    /**
+     * Memastikan seluruh tab master dapat dibuka admin tanpa membocorkan hash kata sandi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_can_open_all_master_tabs_without_exposing_password_hashes(): void
     {
         foreach (['rooms', 'facilities', 'bookings', 'schedules', 'users'] as $tab) {
@@ -32,6 +44,10 @@ class AdminMasterTest extends TestCase
         }
     }
 
+    /**
+     * Memastikan pengguna non-admin tidak dapat mengubah master data.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     #[DataProvider('nonAdminRoles')]
     public function test_non_admins_cannot_mutate_any_master_data(string $role): void
     {
@@ -47,6 +63,10 @@ class AdminMasterTest extends TestCase
         }
     }
 
+    /**
+     * Memastikan pembuatan dan perubahan ruangan menyimpan foto serta fasilitas.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_room_create_edit_photo_and_facilities_are_saved(): void
     {
         Storage::fake('public');
@@ -64,6 +84,10 @@ class AdminMasterTest extends TestCase
         $this->get('/admin/rooms')->assertSeeText('Informasi ruangan berhasil diperbarui.');
     }
 
+    /**
+     * Memastikan data ruangan tidak valid menghasilkan kesalahan modal tanpa menulis data.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_invalid_room_data_returns_modal_validation_errors_without_writes(): void
     {
         $roomCount = DB::table('rooms')->count();
@@ -72,12 +96,20 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseCount('rooms', $roomCount);
     }
 
+    /**
+     * Memastikan kode ruangan harus unik.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_room_code_must_be_unique(): void
     {
         $this->room();
         $this->postJson('/admin/rooms', $this->roomData())->assertUnprocessable()->assertJsonValidationErrors('code');
     }
 
+    /**
+     * Memastikan riwayat ruangan dipertahankan dan penurunan kapasitas tidak merusak jadwal disetujui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_room_history_is_preserved_and_capacity_cannot_invalidate_approved_bookings(): void
     {
         $room = $this->room();
@@ -89,6 +121,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $booking, 'status' => 'approved']);
     }
 
+    /**
+     * Memastikan ruangan tanpa riwayat dapat dihapus.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_unused_room_can_be_deleted(): void
     {
         $room = $this->room();
@@ -96,6 +132,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseMissing('rooms', ['id' => $room]);
     }
 
+    /**
+     * Memastikan kegagalan perubahan ruangan membersihkan unggahan baru dan menjaga foto lama.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_failed_room_update_cleans_new_upload_and_preserves_original_photo(): void
     {
         Storage::fake('public');
@@ -109,6 +149,10 @@ class AdminMasterTest extends TestCase
         $this->assertCount(1, Storage::disk('public')->allFiles('rooms'));
     }
 
+    /**
+     * Memastikan fasilitas yang masih digunakan tidak dapat dihapus.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_facility_management_prevents_deleting_a_used_facility(): void
     {
         $this->postJson('/admin/facilities', ['name' => 'Proyektor'])->assertOk();
@@ -122,6 +166,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseCount('facilities', 0);
     }
 
+    /**
+     * Memastikan admin membuat akun dengan hash kata sandi dan dapat mempertahankan kata sandi lama.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_creates_users_with_hashed_passwords_and_can_keep_existing_password(): void
     {
         $data = ['name' => 'Dosen Uji', 'identity_number' => '00112233', 'email' => 'dosen@example.com', 'role' => 'dosen', 'password' => 'password-baru', 'password_confirmation' => 'password-baru'];
@@ -139,6 +187,10 @@ class AdminMasterTest extends TestCase
         $this->assertNull($user->fresh());
     }
 
+    /**
+     * Memastikan pengelolaan akun memvalidasi identitas, email, role, dan kata sandi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_management_validates_identity_email_role_and_password(): void
     {
         $this->postJson('/admin/users', ['name' => 'Uji', 'identity_number' => '', 'email' => $this->admin->email, 'role' => 'root', 'password' => 'abc', 'password_confirmation' => 'xyz'])
@@ -146,6 +198,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    /**
+     * Memastikan admin aktif tidak dapat menghapus akun atau menurunkan role-nya sendiri.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_current_admin_cannot_delete_or_demote_their_own_account(): void
     {
         $this->deleteJson('/admin/users/'.$this->admin->id)->assertUnprocessable();
@@ -155,6 +211,10 @@ class AdminMasterTest extends TestCase
         $this->assertAuthenticatedAs($this->admin);
     }
 
+    /**
+     * Memastikan role admin lain dapat diturunkan jika masih ada administrator.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_another_admin_can_be_demoted_when_an_admin_remains(): void
     {
         $other = User::factory()->create(['role' => 'admin', 'identity_number' => 'ADMIN-02']);
@@ -163,6 +223,10 @@ class AdminMasterTest extends TestCase
         $this->assertSame('admin', $this->admin->fresh()->role);
     }
 
+    /**
+     * Memastikan akun dengan riwayat booking atau pemeriksaan tidak dapat dihapus.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_users_with_booking_or_review_history_cannot_be_deleted(): void
     {
         $owner = User::factory()->create();
@@ -175,6 +239,10 @@ class AdminMasterTest extends TestCase
         $this->assertNotNull($reviewer->fresh());
     }
 
+    /**
+     * Memastikan jadwal manual langsung disetujui dengan pemeriksa tepercaya dan muncul di kalender.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_manual_schedule_is_approved_with_trusted_reviewer_and_shows_in_calendar(): void
     {
         $room = $this->room();
@@ -184,6 +252,10 @@ class AdminMasterTest extends TestCase
         $this->get('/dashboard?month=11&year=2026&date=2026-11-01')->assertOk()->assertViewHas('selectedSchedule', fn ($schedule) => $schedule->has($room));
     }
 
+    /**
+     * Memastikan jadwal bentrok ditolak sedangkan waktu bersebelahan diperbolehkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_schedule_conflicts_are_rejected_but_adjacent_times_are_allowed(): void
     {
         $room = $this->room();
@@ -194,6 +266,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseCount('bookings', 2);
     }
 
+    /**
+     * Memastikan jadwal memerlukan ruangan aktif, rentang waktu valid, dan kapasitas mencukupi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_schedule_requires_an_active_room_valid_interval_and_capacity(): void
     {
         $inactive = $this->room(['is_active' => false]);
@@ -204,6 +280,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Memastikan zona waktu jadwal dinormalisasi sebelum pemeriksaan bentrok.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_schedule_with_explicit_timezone_is_normalized_before_conflict_checks(): void
     {
         $room = $this->room();
@@ -213,6 +293,10 @@ class AdminMasterTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('starts_at');
     }
 
+    /**
+     * Memastikan jadwal disetujui dapat direvisi dan dibatalkan tanpa menghapus riwayat.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_approved_schedule_can_be_edited_and_cancelled_without_deleting_history(): void
     {
         $room = $this->room();
@@ -225,6 +309,10 @@ class AdminMasterTest extends TestCase
         $this->patchJson('/admin/schedules/'.$id, $this->scheduleData($room))->assertUnprocessable();
     }
 
+    /**
+     * Memastikan pemindahan jadwal ke ruangan lain memeriksa ulang bentrok.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_moving_a_schedule_to_another_room_rechecks_conflicts(): void
     {
         $first = $this->room();
@@ -238,6 +326,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $id, 'room_id' => $second]);
     }
 
+    /**
+     * Memastikan pengajuan pending hanya dapat disetujui satu kali.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_can_approve_a_pending_application_only_once(): void
     {
         $room = $this->room();
@@ -248,6 +340,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $id, 'status' => 'approved']);
     }
 
+    /**
+     * Memastikan penolakan memerlukan alasan dan mencatat admin yang benar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_rejection_requires_a_reason_and_records_the_actual_admin(): void
     {
         $id = $this->booking($this->room());
@@ -256,6 +352,10 @@ class AdminMasterTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $id, 'status' => 'rejected', 'reviewed_by' => $this->admin->id, 'rejection_reason' => 'Kegiatan memerlukan ruangan lain']);
     }
 
+    /**
+     * Memastikan persetujuan memeriksa ulang bentrok, kapasitas, dan status aktif ruangan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_approval_rechecks_overlap_capacity_and_room_status(): void
     {
         $room = $this->room();
@@ -272,6 +372,10 @@ class AdminMasterTest extends TestCase
         $this->patchJson('/admin/bookings/'.$capacity.'/review', ['decision' => 'approved'])->assertUnprocessable()->assertJsonValidationErrors('room_id');
     }
 
+    /**
+     * Memastikan permintaan data yang tidak ditemukan menghasilkan HTTP 404.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_missing_records_return_404(): void
     {
         $this->deleteJson('/admin/rooms/999')->assertNotFound();
@@ -280,16 +384,28 @@ class AdminMasterTest extends TestCase
         $this->patchJson('/admin/bookings/999/review', ['decision' => 'approved'])->assertNotFound();
     }
 
+    /**
+     * Menyediakan atribut ruangan dasar beserta penyesuaian untuk pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function roomData(array $overrides = []): array
     {
         return array_replace(['code' => 'R-01', 'name' => 'Ruang Uji', 'capacity' => 30, 'location' => 'Gedung FMIPA', 'description' => 'Informasi ruangan', 'is_active' => true], $overrides);
     }
 
+    /**
+     * Menyimpan satu ruangan pengujian dan mengembalikan identitasnya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function room(array $overrides = []): int
     {
         return DB::table('rooms')->insertGetId($this->roomData($overrides) + ['created_at' => now(), 'updated_at' => now()]);
     }
 
+    /**
+     * Menyimpan booking uji dengan atribut yang dapat disesuaikan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function booking(int $room, array $overrides = []): int
     {
         return DB::table('bookings')->insertGetId(array_replace([
@@ -299,11 +415,19 @@ class AdminMasterTest extends TestCase
         ], $overrides));
     }
 
+    /**
+     * Menyediakan payload jadwal admin untuk pengujian pembuatan atau perubahan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function scheduleData(int $room, array $overrides = []): array
     {
         return array_replace(['room_id' => $room, 'user_id' => $this->admin->id, 'purpose' => 'Kegiatan manual', 'participant_count' => 20, 'starts_at' => '2026-11-01T10:00', 'ends_at' => '2026-11-01T11:00'], $overrides);
     }
 
+    /**
+     * Menyediakan variasi role non-admin bagi pengujian otorisasi.
+     * Konsep Laravel: PHPUnit Data Provider untuk Feature Test.
+     */
     public static function nonAdminRoles(): array
     {
         return ['mahasiswa' => ['mahasiswa'], 'dosen' => ['dosen']];

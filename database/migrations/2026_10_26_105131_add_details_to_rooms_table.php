@@ -5,10 +5,15 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Menambahkan detail ruangan setelah memastikan tabel terkait belum berisi data yang memerlukan backfill.
+ * Konsep Laravel: Database Migration (anonymous class), Schema Builder.
+ */
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Menambahkan detail ruangan setelah memastikan tabel terkait belum berisi data yang memerlukan backfill.
+     * Konsep Laravel: Database Migration, Schema Builder / perubahan data pada up().
      */
     public function up(): void
     {
@@ -36,7 +41,8 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Menghapus indeks kode dan kolom detail ruangan yang ditambahkan migration ini.
+     * Konsep Laravel: Database Migration, Rollback melalui down().
      */
     public function down(): void
     {

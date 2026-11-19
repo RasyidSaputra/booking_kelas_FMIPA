@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Mendaftarkan Gate administrator dan pembatasan laju permintaan API saat aplikasi dimulai.
+ * Konsep Laravel: Service Provider, Gate Authorization dan Rate Limiting.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Menyediakan kerangka aksi register; method ini belum berisi implementasi.
+     * Konsep Laravel: Service Provider, Gate Authorization dan Rate Limiting.
      */
     public function register(): void
     {
@@ -20,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap any application services.
+     * Mendefinisikan Gate view-room-master dan batas permintaan login maupun endpoint API.
+     * Konsep Laravel: Service Provider, Gate Authorization dan Rate Limiting.
      */
     public function boot(): void
     {

@@ -10,8 +10,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Menerima permintaan peminjaman ruangan dan meneruskannya ke logika bisnis booking.
+ * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+ */
 class BookingController extends Controller
 {
+    /**
+     * Menampilkan daftar booking milik pengguna yang masuk dengan pagination.
+     * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+     */
     public function index(Request $request): View
     {
         $bookings = DB::table('bookings')->join('rooms', 'rooms.id', '=', 'bookings.room_id')
@@ -23,6 +31,10 @@ class BookingController extends Controller
         return view('bookings.index', compact('bookings'));
     }
 
+    /**
+     * Menampilkan detail booking setelah memeriksa keberadaan data dan akses pemilik atau admin.
+     * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+     */
     public function show(Request $request, int $booking): View
     {
         $bookingData = DB::table('bookings')
@@ -52,6 +64,10 @@ class BookingController extends Controller
         ]);
     }
 
+    /**
+     * Mengirim data tervalidasi ke service dan mengarahkan kembali dengan pesan sukses atau kesalahan.
+     * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+     */
     public function store(StoreBookingRequest $request, BookingManagement $management): RedirectResponse
     {
         try {
@@ -67,6 +83,10 @@ class BookingController extends Controller
         return redirect()->route('bookings.index')->with('success', 'Pengajuan berhasil dibuat, silakan tunggu persetujuan Admin.');
     }
 
+    /**
+     * Memvalidasi revisi booking lalu meminta service memperbarui jadwal milik pengguna.
+     * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+     */
     public function update(Request $request, int $booking, BookingManagement $management): RedirectResponse
     {
         $validated = $request->validate([
@@ -99,6 +119,10 @@ class BookingController extends Controller
             : 'Waktu booking berhasil direvisi.');
     }
 
+    /**
+     * Meminta service membatalkan booking milik pengguna dan menampilkan hasilnya melalui session flash.
+     * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+     */
     public function cancel(Request $request, int $booking, BookingManagement $management): RedirectResponse
     {
         try {
@@ -114,6 +138,10 @@ class BookingController extends Controller
         return redirect()->route('bookings.index')->with('success', 'Booking berhasil dibatalkan.');
     }
 
+    /**
+     * Menggunakan kembali alur pembatalan agar permintaan DELETE tetap mempertahankan riwayat booking.
+     * Konsep Laravel: Controller (MVC), HTTP Request dan Response.
+     */
     public function destroy(Request $request, int $booking, BookingManagement $management): RedirectResponse
     {
         return $this->cancel($request, $booking, $management);

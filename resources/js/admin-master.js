@@ -1,3 +1,7 @@
+/**
+ * Menyiapkan nilai formulir master tanpa mengambil password dari data tabel.
+ * Konsep Laravel: Integrasi Blade dan Alpine.js; fungsi frontend JavaScript, bukan class Laravel.
+ */
 export function masterForm(record = {}) {
     return {
         code: '', name: '', capacity: '', location: '', description: '', photo_url: null,
@@ -13,6 +17,10 @@ export function masterForm(record = {}) {
     };
 }
 
+/**
+ * Memetakan aksi modal ke URL route dan metode HTTP endpoint master Laravel.
+ * Konsep Laravel: Named Routes dari Blade dan HTTP Methods; fungsi frontend JavaScript.
+ */
 export function masterAction(routes, kind, id) {
     const resources = { room: 'rooms', facility: 'facilities', user: 'users', schedule: 'schedules' };
     if (resources[kind]) {
@@ -30,15 +38,31 @@ export function masterAction(routes, kind, id) {
     throw new Error('Aksi master data tidak dikenali.');
 }
 
+/**
+ * Membentuk state dan perilaku modal master data yang didaftarkan ke Alpine.
+ * Konsep Laravel: Integrasi Blade, Alpine.js dan endpoint controller web Laravel.
+ */
 export default function adminMaster(routes) {
     return {
         kind: '', recordId: null, form: masterForm(), errors: {}, generalError: '', busy: false,
+        /**
+         * Menghasilkan judul modal berdasarkan jenis aksi dan keberadaan identitas data.
+         * Konsep Laravel: UI Alpine.js yang ditampilkan oleh Blade; getter JavaScript.
+         */
         get title() {
             const labels = { room: 'ruangan', facility: 'fasilitas', user: 'pengguna', schedule: 'jadwal' };
             if (labels[this.kind]) return `${this.recordId ? 'Edit' : 'Tambah'} ${labels[this.kind]}`;
             return { approve: 'Setujui pengajuan', reject: 'Tolak pengajuan', cancel: 'Batalkan jadwal', 'delete-room': 'Hapus ruangan', 'delete-facility': 'Hapus fasilitas', 'delete-user': 'Hapus pengguna' }[this.kind] ?? 'Master data';
         },
+        /**
+         * Menandai aksi penghapusan, penolakan, atau pembatalan untuk tampilan modal.
+         * Konsep Laravel: UI Alpine.js dan Blade; getter JavaScript.
+         */
         get destructive() { return this.kind.startsWith('delete-') || ['reject', 'cancel'].includes(this.kind); },
+        /**
+         * Mengisi state formulir dan membuka dialog setelah DOM Alpine selesai diperbarui.
+         * Konsep Laravel: Integrasi Blade dan Alpine.js; method frontend.
+         */
         open(kind, record = {}) {
             if (this.busy) return;
             this.kind = kind;
@@ -49,13 +73,29 @@ export default function adminMaster(routes) {
             this.$refs.form.reset();
             this.$nextTick(() => this.$refs.dialog.showModal());
         },
+        /**
+         * Menutup dialog selama tidak ada permintaan penyimpanan yang berjalan.
+         * Konsep Laravel: Integrasi Blade dan Alpine.js; method frontend.
+         */
         close() { if (!this.busy) this.$refs.dialog.close(); },
+        /**
+         * Mengosongkan state formulir dan pesan kesalahan setelah penggunaan modal.
+         * Konsep Laravel: Integrasi Blade dan Alpine.js; method frontend.
+         */
         reset() { this.kind = ''; this.recordId = null; this.form = masterForm(); this.errors = {}; this.generalError = ''; },
+        /**
+         * Menutup modal ketika pengguna mengeklik area di luar kotak dialog.
+         * Konsep Laravel: Interaksi DOM pada halaman Blade; method JavaScript.
+         */
         backdrop(event) {
             if (event.target !== this.$refs.dialog) return;
             const box = this.$refs.dialog.getBoundingClientRect();
             if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) this.close();
         },
+        /**
+         * Mengirim FormData dengan token CSRF dan method spoofing, lalu menampilkan kesalahan validasi atau memuat ulang halaman.
+         * Konsep Laravel: CSRF Protection, HTTP Method Spoofing dan respons JSON Validation Laravel.
+         */
         async submit() {
             if (this.busy) return;
             this.busy = true;

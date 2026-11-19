@@ -8,10 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Menggabungkan kalender ruangan dan ringkasan booking pengguna untuk dashboard.
+ * Konsep Laravel: Invokable Controller, Dependency Injection dan Blade View.
+ */
 class DashboardController extends Controller
 {
     /**
-     * Handle the incoming request.
+     * Memvalidasi pilihan bulan dan tanggal lalu menampilkan kalender serta ringkasan booking pengguna.
+     * Konsep Laravel: Invokable Controller, Dependency Injection dan Blade View.
      */
     public function __invoke(Request $request, RoomCalendar $calendar): View
     {

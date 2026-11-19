@@ -7,10 +7,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Password Update pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class PasswordUpdateTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan kata sandi dapat diperbarui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_password_can_be_updated(): void
     {
         $user = User::factory()->create();
@@ -31,6 +39,10 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
     }
 
+    /**
+     * Memastikan perubahan kata sandi memerlukan kata sandi saat ini yang benar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
         $user = User::factory()->create();
@@ -51,6 +63,10 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 
+    /**
+     * Memastikan kata sandi baru harus cocok dengan konfirmasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_new_password_must_match_its_confirmation(): void
     {
         $user = User::factory()->create();
@@ -64,6 +80,10 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 
+    /**
+     * Memastikan kata sandi baru memenuhi panjang minimal.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_new_password_must_meet_the_minimum_length(): void
     {
         $user = User::factory()->create();
@@ -77,6 +97,10 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 
+    /**
+     * Memastikan perubahan kata sandi tidak dapat mengubah role pengguna.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_password_update_cannot_change_the_users_role(): void
     {
         $user = User::factory()->create(['role' => 'mahasiswa']);

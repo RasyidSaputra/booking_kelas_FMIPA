@@ -5,8 +5,16 @@ namespace App\Support;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Validator;
 
+/**
+ * Membagikan aturan dan pesan validasi jadwal antara formulir web dan impor CSV.
+ * Konsep Laravel: Validation; class pendukung buatan aplikasi.
+ */
 class LectureScheduleRules
 {
+    /**
+     * Mendefinisikan aturan pola mingguan, jam operasional, dan tanggal efektif untuk pembuatan atau perubahan.
+     * Konsep Laravel: Validation; class pendukung buatan aplikasi.
+     */
     public static function rules(bool $updating = false): array
     {
         return [
@@ -24,6 +32,10 @@ class LectureScheduleRules
         ];
     }
 
+    /**
+     * Menambahkan kesalahan jika rentang pola melebihi 366 hari setelah validasi dasar berhasil.
+     * Konsep Laravel: Validation; class pendukung buatan aplikasi.
+     */
     public static function validatePeriod(Validator $validator): void
     {
         if ($validator->errors()->isNotEmpty()) {
@@ -35,6 +47,10 @@ class LectureScheduleRules
         }
     }
 
+    /**
+     * Menyediakan label kolom jadwal dalam bahasa Indonesia untuk pesan validasi.
+     * Konsep Laravel: Validation; class pendukung buatan aplikasi.
+     */
     public static function attributes(): array
     {
         return [
@@ -47,6 +63,10 @@ class LectureScheduleRules
         ];
     }
 
+    /**
+     * Menyediakan pesan kesalahan jadwal, jam operasional, dan periode dalam bahasa Indonesia.
+     * Konsep Laravel: Validation; class pendukung buatan aplikasi.
+     */
     public static function messages(): array
     {
         return [

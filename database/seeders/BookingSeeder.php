@@ -8,10 +8,15 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Menyiapkan contoh jadwal dan pengajuan untuk simulasi penggunaan ruangan.
+ * Konsep Laravel: Database Seeder, Query Builder / Eloquent untuk data contoh.
+ */
 class BookingSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Menyiapkan contoh jadwal dan pengajuan untuk simulasi penggunaan ruangan.
+     * Konsep Laravel: Database Seeder, Query Builder / Eloquent untuk data contoh.
      */
     public function run(): void
     {

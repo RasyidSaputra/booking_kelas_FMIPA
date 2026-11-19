@@ -11,20 +11,36 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
+/**
+ * Mengelola data ruangan, fasilitas terkait, dan berkas foto pada master admin.
+ * Konsep Laravel: Controller (MVC), Database Transaction dan Filesystem.
+ */
 class RoomManagementController extends Controller
 {
     use RespondsWithMasterData;
 
+    /**
+     * Meneruskan pembuatan ruangan ke alur penyimpanan bersama.
+     * Konsep Laravel: Controller (MVC), Database Transaction dan Filesystem.
+     */
     public function store(RoomRequest $request)
     {
         return $this->saveRoom($request);
     }
 
+    /**
+     * Meneruskan perubahan ruangan terpilih ke alur penyimpanan bersama.
+     * Konsep Laravel: Controller (MVC), Database Transaction dan Filesystem.
+     */
     public function update(RoomRequest $request, int $room)
     {
         return $this->saveRoom($request, $room);
     }
 
+    /**
+     * Menyimpan foto, data ruangan, dan tabel pivot fasilitas sambil menjaga kapasitas serta membersihkan foto gagal atau lama.
+     * Konsep Laravel: Controller (MVC), Database Transaction dan Filesystem.
+     */
     private function saveRoom(RoomRequest $request, ?int $id = null)
     {
         $data = $request->validated();
@@ -71,6 +87,10 @@ class RoomManagementController extends Controller
         return $this->saved($request, $id ? 'Informasi ruangan berhasil diperbarui.' : 'Ruangan berhasil ditambahkan.', 'rooms');
     }
 
+    /**
+     * Menghapus ruangan dan fotonya hanya jika ruangan tidak memiliki riwayat peminjaman.
+     * Konsep Laravel: Controller (MVC), Database Transaction dan Filesystem.
+     */
     public function destroy(Request $request, int $room)
     {
         $photo = DB::transaction(function () use ($room): ?string {

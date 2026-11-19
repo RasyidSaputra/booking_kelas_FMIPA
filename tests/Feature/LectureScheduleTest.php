@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Lecture Schedule pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class LectureScheduleTest extends TestCase
 {
     use RefreshDatabase;
@@ -18,6 +22,10 @@ class LectureScheduleTest extends TestCase
 
     private int $room;
 
+    /**
+     * Menyiapkan akun, ruangan, atau data awal yang diperlukan sebelum setiap skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +39,10 @@ class LectureScheduleTest extends TestCase
         $this->actingAs($this->admin);
     }
 
+    /**
+     * Memastikan pembuatan satu pola semester menghasilkan pertemuan mingguan yang memblokir kalender.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_creates_a_semester_once_and_all_weekly_meetings_block_the_calendar(): void
     {
         $this->get('/admin/lecture-schedules')->assertOk()->assertSeeText('Tambah jadwal mingguan');
@@ -49,6 +61,10 @@ class LectureScheduleTest extends TestCase
         $this->get('/admin/lecture-schedules?edit=1')->assertOk()->assertSeeText('Ubah jadwal berikutnya');
     }
 
+    /**
+     * Memastikan peminjam tidak dapat memakai slot kuliah tetapi dapat memilih waktu bersebelahan dan akhir pekan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_borrower_cannot_book_a_lecture_but_can_book_adjacent_times_and_weekends(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -64,6 +80,10 @@ class LectureScheduleTest extends TestCase
         $this->get('/rooms/'.$this->room)->assertOk()->assertSeeText('surat izin atau surat peminjaman ruangan');
     }
 
+    /**
+     * Memastikan pengajuan pending diperiksa ulang saat disetujui admin.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_pending_booking_is_checked_again_when_admin_approves_it(): void
     {
         $this->post('/bookings', $this->bookingData('2026-11-09', '09:00', '11:00'))->assertSessionHasNoErrors();
@@ -74,6 +94,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $pending, 'status' => 'pending']);
     }
 
+    /**
+     * Memastikan ruangan tersedia tepat pada waktu kuliah berakhir.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_the_room_becomes_available_at_the_exact_lecture_end_time(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -84,6 +108,10 @@ class LectureScheduleTest extends TestCase
         $this->get('/rooms')->assertViewHas('currentlyOccupiedCount', 0);
     }
 
+    /**
+     * Memastikan satu bentrok membatalkan seluruh pertemuan yang dibentuk beserta polanya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_one_conflict_rolls_back_all_generated_meetings_and_the_pattern(): void
     {
         $this->postJson('/admin/schedules', $this->meetingData('2026-11-16', '09:00', '11:00'))->assertOk();
@@ -93,6 +121,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseCount('bookings', 1);
     }
 
+    /**
+     * Memastikan pembatalan satu pertemuan hanya membuka slot pada tanggal tersebut.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_cancelling_one_meeting_opens_only_that_date(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -104,6 +136,10 @@ class LectureScheduleTest extends TestCase
         $this->assertSame(3, DB::table('bookings')->whereNotNull('lecture_schedule_id')->where('status', 'approved')->count());
     }
 
+    /**
+     * Memastikan satu pertemuan dapat dipindah tanpa mengubah minggu lainnya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_one_meeting_can_move_without_changing_the_other_weeks(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -118,6 +154,10 @@ class LectureScheduleTest extends TestCase
         $this->post('/bookings', $this->bookingData('2026-11-10', '13:00', '15:00'))->assertSessionHas('error');
     }
 
+    /**
+     * Memastikan perubahan pola mendatang menjaga riwayat dan pengecualian pertemuan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_future_pattern_changes_preserve_history_and_individual_exceptions(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -133,6 +173,10 @@ class LectureScheduleTest extends TestCase
         $this->assertSame(3, DB::table('bookings')->where('status', 'approved')->count());
     }
 
+    /**
+     * Memastikan kegagalan perubahan mendatang menjaga pola dan pertemuan semula.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_failed_future_update_preserves_the_original_pattern_and_occurrences(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -145,6 +189,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseHas('lecture_schedules', ['id' => 1, 'start_time' => '08:00']);
     }
 
+    /**
+     * Memastikan penghentian seri membuka slot mendatang sambil menjaga pertemuan terdahulu.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_stopping_a_series_releases_future_slots_and_keeps_earlier_meetings(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -156,6 +204,10 @@ class LectureScheduleTest extends TestCase
         $this->post('/bookings', $this->bookingData('2026-11-09', '08:00', '10:00'))->assertRedirect(route('bookings.index'));
     }
 
+    /**
+     * Memastikan pertemuan lampau tidak dibentuk saat semester sudah dimulai.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_past_meetings_are_not_generated_when_the_semester_has_already_started(): void
     {
         $this->post('/admin/lecture-schedules', $this->data(['starts_on' => '2026-10-01']))->assertSessionHasNoErrors();
@@ -163,6 +215,10 @@ class LectureScheduleTest extends TestCase
         $this->assertSame(0, DB::table('bookings')->where('starts_at', '<', now())->count());
     }
 
+    /**
+     * Memastikan pertemuan berjalan dipertahankan ketika pola mendatang diubah.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_an_ongoing_meeting_is_preserved_when_the_future_pattern_changes(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -175,6 +231,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseHas('bookings', ['lecture_date' => '2026-11-16', 'starts_at' => '2026-11-16 13:00:00', 'status' => 'approved']);
     }
 
+    /**
+     * Memastikan pertemuan yang sudah dimulai tidak dapat direvisi atau dibatalkan satuan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_started_lecture_meetings_cannot_be_edited_or_cancelled_individually(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -187,6 +247,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $meeting->id, 'starts_at' => '2026-11-02 08:00:00', 'status' => 'approved']);
     }
 
+    /**
+     * Memastikan pola tidak valid tidak menulis data.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     #[DataProvider('invalidPatterns')]
     public function test_invalid_patterns_do_not_write_any_data(array $changes, string $field): void
     {
@@ -195,6 +259,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Menyediakan variasi pola kuliah tidak valid untuk pengujian validasi.
+     * Konsep Laravel: PHPUnit Data Provider untuk Feature Test.
+     */
     public static function invalidPatterns(): array
     {
         return [
@@ -209,6 +277,10 @@ class LectureScheduleTest extends TestCase
         ];
     }
 
+    /**
+     * Memastikan ruangan nonaktif dan perubahan berlaku surut ditolak.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_inactive_rooms_and_retroactive_updates_are_rejected(): void
     {
         DB::table('rooms')->where('id', $this->room)->update(['is_active' => false]);
@@ -221,6 +293,10 @@ class LectureScheduleTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('effective_from');
     }
 
+    /**
+     * Memastikan mahasiswa dan dosen tidak dapat mengelola pola kuliah berulang.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_students_and_lecturers_cannot_manage_recurring_lectures(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -233,6 +309,10 @@ class LectureScheduleTest extends TestCase
         }
     }
 
+    /**
+     * Memastikan revisi pemilik tetap dipertahankan setelah pola berulang diperbarui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_owner_revision_survives_a_recurring_schedule_update(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -256,6 +336,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $meeting->id, 'status' => 'pending', 'purpose' => 'Kuliah pengganti']);
     }
 
+    /**
+     * Memastikan pembatalan pemilik tetap dipertahankan setelah pola berulang diperbarui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_owner_cancellation_survives_a_recurring_schedule_update(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -273,6 +357,10 @@ class LectureScheduleTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $meeting->id, 'status' => 'cancelled']);
     }
 
+    /**
+     * Memastikan pemilik tidak dapat mengubah kuliah yang sudah dimulai.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_owner_cannot_change_a_lecture_that_has_started(): void
     {
         $this->post('/admin/lecture-schedules', $this->data())->assertSessionHasNoErrors();
@@ -292,6 +380,10 @@ class LectureScheduleTest extends TestCase
         ]);
     }
 
+    /**
+     * Menyediakan data dasar formulir dan menggabungkan penyesuaian untuk skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function data(array $changes = []): array
     {
         return array_replace([
@@ -302,6 +394,10 @@ class LectureScheduleTest extends TestCase
         ], $changes);
     }
 
+    /**
+     * Menyediakan data pengajuan peminjaman untuk skenario jadwal kuliah.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function bookingData(string $date, string $start, string $end): array
     {
         return [
@@ -310,6 +406,10 @@ class LectureScheduleTest extends TestCase
         ];
     }
 
+    /**
+     * Menyediakan data perubahan satu pertemuan kuliah untuk pengujian pengecualian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function meetingData(string $date, string $start, string $end): array
     {
         return [

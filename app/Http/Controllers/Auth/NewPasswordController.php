@@ -14,10 +14,15 @@ use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Memproses penggantian kata sandi menggunakan token pemulihan.
+ * Konsep Laravel: Password Reset, Password Broker, Hashing dan Events.
+ */
 class NewPasswordController extends Controller
 {
     /**
-     * Display the password reset view.
+     * Menampilkan formulir reset kata sandi dengan data permintaan token.
+     * Konsep Laravel: Password Reset, Password Broker, Hashing dan Events.
      */
     public function create(Request $request): View
     {
@@ -25,7 +30,8 @@ class NewPasswordController extends Controller
     }
 
     /**
-     * Handle an incoming new password request.
+     * Memvalidasi token pemulihan dan mengganti kata sandi melalui Password Broker serta memicu event PasswordReset.
+     * Konsep Laravel: Password Reset, Password Broker, Hashing dan Events.
      *
      * @throws ValidationException
      */

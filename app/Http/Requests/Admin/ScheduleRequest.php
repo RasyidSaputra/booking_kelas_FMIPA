@@ -2,8 +2,16 @@
 
 namespace App\Http\Requests\Admin;
 
+/**
+ * Memvalidasi ruangan, pengguna, peserta, serta urutan waktu jadwal admin.
+ * Konsep Laravel: Form Request, Exists Rule dan Date Validation.
+ */
 class ScheduleRequest extends MasterRequest
 {
+    /**
+     * Menetapkan aturan validasi pemilik, ruangan, jumlah peserta, serta urutan waktu jadwal.
+     * Konsep Laravel: Form Request Validation, rules().
+     */
     public function rules(): array
     {
         return [

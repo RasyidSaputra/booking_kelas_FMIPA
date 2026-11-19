@@ -6,10 +6,15 @@ use App\Models\Facility;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * Menyiapkan policy Facility; seluruh keputusan saat ini masih menolak akses.
+ * Konsep Laravel: Authorization Policy; kerangka belum diimplementasikan.
+ */
 class FacilityPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Menyiapkan keputusan izin melihat daftar data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability viewAny.
      */
     public function viewAny(User $user): bool
     {
@@ -17,7 +22,8 @@ class FacilityPolicy
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Menyiapkan keputusan izin melihat detail data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability view.
      */
     public function view(User $user, Facility $facility): bool
     {
@@ -25,7 +31,8 @@ class FacilityPolicy
     }
 
     /**
-     * Determine whether the user can create models.
+     * Menyiapkan keputusan izin membuat data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability create.
      */
     public function create(User $user): bool
     {
@@ -33,7 +40,8 @@ class FacilityPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Menyiapkan keputusan izin mengubah data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability update.
      */
     public function update(User $user, Facility $facility): bool
     {
@@ -41,7 +49,8 @@ class FacilityPolicy
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Menyiapkan keputusan izin menghapus data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability delete.
      */
     public function delete(User $user, Facility $facility): bool
     {
@@ -49,7 +58,8 @@ class FacilityPolicy
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Menyiapkan keputusan izin memulihkan data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability restore.
      */
     public function restore(User $user, Facility $facility): bool
     {
@@ -57,7 +67,8 @@ class FacilityPolicy
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Menyiapkan keputusan izin menghapus permanen data; implementasi saat ini selalu mengembalikan false.
+     * Konsep Laravel: Authorization Policy, ability forceDelete.
      */
     public function forceDelete(User $user, Facility $facility): bool
     {

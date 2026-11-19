@@ -7,6 +7,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Api pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class ApiTest extends TestCase
 {
     use RefreshDatabase;
@@ -15,6 +19,10 @@ class ApiTest extends TestCase
 
     private int $room;
 
+    /**
+     * Menyiapkan akun, ruangan, atau data awal yang diperlukan sebelum setiap skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,11 +34,19 @@ class ApiTest extends TestCase
         ]);
     }
 
+    /**
+     * Membuat token Sanctum untuk menguji permintaan API dan masa berlakunya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function token(?User $user = null, $expiresAt = null): string
     {
         return ($user ?? $this->borrower)->createToken('Pengujian', ['*'], $expiresAt)->plainTextToken;
     }
 
+    /**
+     * Menyediakan payload pengajuan API dengan nilai yang dapat ditimpa untuk tiap skenario.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function payload(array $overrides = []): array
     {
         return array_replace([
@@ -40,6 +56,10 @@ class ApiTest extends TestCase
         ], $overrides);
     }
 
+    /**
+     * Memastikan login, pembacaan profil, dan logout hanya mencabut token yang sedang digunakan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_login_me_and_logout_revoke_only_current_token(): void
     {
         $otherToken = $this->token();
@@ -57,6 +77,10 @@ class ApiTest extends TestCase
         $this->withToken($otherToken)->getJson('/api/v1/me')->assertOk();
     }
 
+    /**
+     * Memastikan kredensial salah dan batas percobaan login tidak menerbitkan token.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_invalid_login_and_rate_limit_do_not_issue_tokens(): void
     {
         for ($i = 0; $i < 5; $i++) {
@@ -67,6 +91,10 @@ class ApiTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
+    /**
+     * Memastikan request API dari tamu, input tidak valid, dan route tidak ada selalu menghasilkan JSON.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_api_always_returns_json_for_guests_validation_and_missing_routes(): void
     {
         $this->get('/api/v1/rooms')->assertUnauthorized()->assertHeader('Content-Type', 'application/json');
@@ -74,6 +102,10 @@ class ApiTest extends TestCase
         $this->get('/api/v1/missing')->assertNotFound()->assertHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Memastikan token kedaluwarsa dan session web tidak dapat mengautentikasi API.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_expired_token_and_web_session_cannot_authenticate_api(): void
     {
         $token = $this->token(expiresAt: now()->subMinute());
@@ -82,6 +114,10 @@ class ApiTest extends TestCase
         $this->actingAs($this->borrower, 'web')->getJson('/api/v1/me')->assertUnauthorized();
     }
 
+    /**
+     * Memastikan filter serta pagination ruangan bekerja dan ruangan nonaktif dilindungi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_rooms_filter_pagination_and_inactive_room_protection(): void
     {
         $this->withToken($this->token())->getJson('/api/v1/rooms?q=API&capacity=30&per_page=1')
@@ -92,6 +128,10 @@ class ApiTest extends TestCase
         $this->getJson('/api/v1/rooms?per_page=101')->assertUnprocessable();
     }
 
+    /**
+     * Memastikan booking akhir pekan memakai identitas pengguna yang masuk dan tetap memerlukan pemeriksaan admin.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_weekend_booking_uses_authenticated_owner_and_requires_admin_review(): void
     {
         $this->withToken($this->token());
@@ -106,6 +146,10 @@ class ApiTest extends TestCase
         $this->getJson('/api/v1/bookings')->assertOk()->assertJsonCount(0, 'data');
     }
 
+    /**
+     * Memastikan pengajuan API memvalidasi kapasitas, waktu, dan status ruangan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_booking_validates_capacity_time_and_inactive_rooms(): void
     {
         $this->withToken($this->token());
@@ -118,6 +162,10 @@ class ApiTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Memastikan persetujuan admin memeriksa bentrok dan memperbolehkan waktu bersebelahan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_approval_rechecks_conflicts_and_adjacent_times_are_allowed(): void
     {
         $this->withToken($this->token());
@@ -136,6 +184,10 @@ class ApiTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $second, 'status' => 'pending']);
     }
 
+    /**
+     * Memastikan penolakan admin wajib disertai alasan dan tidak dapat diulang.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_rejection_requires_reason_and_cannot_be_repeated(): void
     {
         $this->withToken($this->token());
@@ -148,6 +200,10 @@ class ApiTest extends TestCase
         $this->patchJson('/api/v1/admin/bookings/'.$id.'/review', ['decision' => 'approved'])->assertUnprocessable();
     }
 
+    /**
+     * Memastikan web dan API menggunakan aturan bentrok yang sama.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_web_and_api_share_conflict_checks(): void
     {
         $this->actingAs($this->borrower)->post('/bookings', $this->payload())->assertSessionHasNoErrors()->assertRedirect('/bookings');
@@ -160,6 +216,10 @@ class ApiTest extends TestCase
         $this->assertDatabaseCount('bookings', 1);
     }
 
+    /**
+     * Memastikan persetujuan memeriksa ulang kapasitas serta status aktif ruangan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_approval_rechecks_room_capacity_and_active_state(): void
     {
         $this->withToken($this->token());
@@ -173,6 +233,10 @@ class ApiTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $id, 'status' => 'pending', 'reviewed_by' => null]);
     }
 
+    /**
+     * Memastikan data tidak ditemukan dan pemeriksaan ketersediaan tidak valid menghasilkan kesalahan yang sesuai.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_missing_records_and_invalid_availability_return_expected_errors(): void
     {
         $this->withToken($this->token());
@@ -184,6 +248,10 @@ class ApiTest extends TestCase
         $this->postJson('/api/v1/bookings', $this->payload(['booking_date' => 'tomorrow']))->assertUnprocessable();
     }
 
+    /**
+     * Memastikan input login rusak atau identitas tidak dikenal tidak pernah memperoleh token.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_malformed_or_unknown_login_never_issues_token(): void
     {
         $this->postJson('/api/v1/login', ['identity_number' => ['bad'], 'password' => 'password', 'device_name' => 'Test'])->assertUnprocessable();

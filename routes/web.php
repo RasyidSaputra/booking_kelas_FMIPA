@@ -6,10 +6,18 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Menampilkan halaman login pada alamat awal aplikasi.
+ * Konsep Laravel: Routing Web dan Route Closure.
+ */
 Route::get('/', function () {
     return view('auth/login');
 });
 
+/**
+ * Mengelompokkan halaman utama yang melewati middleware login dan verifikasi.
+ * Konsep Laravel: Route Group, Authentication Middleware dan Named Routes.
+ */
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
@@ -26,6 +34,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     require __DIR__.'/admin.php';
 });
 
+/**
+ * Mengelompokkan route pengelolaan profil yang membutuhkan sesi login.
+ * Konsep Laravel: Route Group dan Authentication Middleware.
+ */
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

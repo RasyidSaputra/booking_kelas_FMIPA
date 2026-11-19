@@ -7,10 +7,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Authentication pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan halaman login dapat ditampilkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_login_screen_can_be_rendered(): void
     {
         $response = $this->get('/login');
@@ -18,6 +26,10 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * Memastikan pengguna dapat login melalui formulir login.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
         $user = User::factory()->create(['identity_number' => '00123456789']);
@@ -31,6 +43,10 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    /**
+     * Memastikan kata sandi salah ditolak saat login.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create(['identity_number' => '00123456789']);
@@ -43,6 +59,10 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    /**
+     * Memastikan model pengguna mengubah kata sandi biasa menjadi hash sebelum penyimpanan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_model_hashes_a_plain_password_before_storing_it(): void
     {
         $user = User::factory()->create([
@@ -55,6 +75,10 @@ class AuthenticationTest extends TestCase
         $this->assertTrue(Hash::check('local-test-password', $stored));
     }
 
+    /**
+     * Memastikan pengguna dapat logout.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_users_can_logout(): void
     {
         $user = User::factory()->create();

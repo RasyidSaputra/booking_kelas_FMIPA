@@ -6,11 +6,15 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Menyusun okupansi ruangan aktif dan jadwal harian untuk kalender bulanan.
+ * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Collections.
+ */
 class RoomCalendar
 {
     /**
-     * Ringkasan harian berdasarkan ruang aktif dengan booking disetujui.
-     * Satu ruangan dihitung sekali per tanggal, bukan per pengajuan.
+     * Merangkum okupansi bulanan; satu ruangan dihitung sekali per tanggal berdasarkan booking disetujui.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Collections.
      */
     public function forMonth(CarbonImmutable $month): array
     {

@@ -8,10 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Menyajikan daftar, informasi, dan jadwal pemakaian ruangan.
+ * Konsep Laravel: Controller (MVC), Query Builder dan View.
+ */
 class RoomController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Memvalidasi filter dan menyajikan ruangan aktif beserta jadwal serta ringkasan ketersediaannya.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function index(Request $request): View
     {
@@ -92,7 +97,8 @@ class RoomController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menyediakan kerangka aksi create; method ini belum berisi implementasi.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function create()
     {
@@ -100,7 +106,8 @@ class RoomController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyediakan kerangka aksi store; method ini belum berisi implementasi.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function store(Request $request)
     {
@@ -108,7 +115,8 @@ class RoomController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan informasi ruangan hasil route model binding, fasilitas, dan jadwal yang sudah disetujui.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function show(Room $room): View
     {
@@ -142,7 +150,8 @@ class RoomController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menyediakan kerangka aksi edit; method ini belum berisi implementasi.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function edit(Room $room)
     {
@@ -150,7 +159,8 @@ class RoomController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Menyediakan kerangka aksi update; method ini belum berisi implementasi.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function update(Request $request, Room $room)
     {
@@ -158,7 +168,8 @@ class RoomController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menyediakan kerangka aksi destroy; method ini belum berisi implementasi.
+     * Konsep Laravel: Controller (MVC), Query Builder dan View.
      */
     public function destroy(Room $room)
     {

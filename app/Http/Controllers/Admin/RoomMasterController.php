@@ -10,8 +10,16 @@ use Illuminate\Validation\Rule;
 use Carbon\CarbonImmutable;
 use Illuminate\View\View;
 
+/**
+ * Menyajikan tab, pencarian, filter, dan statistik master data administrator.
+ * Konsep Laravel: Invokable Controller, Query Builder, Pagination dan Blade View.
+ */
 class RoomMasterController extends Controller
 {
+    /**
+     * Memvalidasi filter tab admin lalu menyiapkan data terpaginasikan, statistik, dan pilihan formulir master.
+     * Konsep Laravel: Invokable Controller, Query Builder, Pagination dan Blade View.
+     */
     public function __invoke(Request $request): View
     {
         $input = $request->validate([

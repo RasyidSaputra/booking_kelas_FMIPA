@@ -12,10 +12,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Mengelola akun pengguna sambil menjaga admin terakhir dan riwayat peminjaman.
+ * Konsep Laravel: Controller (MVC), Eloquent, Hashing dan Database Transaction.
+ */
 class UserManagementController extends Controller
 {
     use RespondsWithMasterData;
 
+    /**
+     * Membuat akun dari data tervalidasi dan menyimpan kata sandi yang sudah di-hash.
+     * Konsep Laravel: Controller (MVC), Eloquent, Hashing dan Database Transaction.
+     */
     public function store(UserRequest $request)
     {
         $data = $request->validated();
@@ -27,6 +35,10 @@ class UserManagementController extends Controller
         return $this->saved($request, 'Pengguna berhasil ditambahkan.', 'users');
     }
 
+    /**
+     * Memperbarui akun dengan lock sambil melindungi role akun aktif dan administrator terakhir.
+     * Konsep Laravel: Controller (MVC), Eloquent, Hashing dan Database Transaction.
+     */
     public function update(UserRequest $request, int $user)
     {
         DB::transaction(function () use ($request, $user): void {
@@ -56,6 +68,10 @@ class UserManagementController extends Controller
         return $this->saved($request, 'Data pengguna berhasil diperbarui.', 'users');
     }
 
+    /**
+     * Menolak penghapusan akun aktif, admin terakhir, atau akun bersejarah; membersihkan avatar setelah transaksi berhasil.
+     * Konsep Laravel: Controller (MVC), Eloquent, Hashing dan Database Transaction.
+     */
     public function destroy(Request $request, int $user)
     {
         $avatar = DB::transaction(function () use ($request, $user): ?string {

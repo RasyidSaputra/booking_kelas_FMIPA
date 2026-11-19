@@ -8,10 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * Memperbarui kata sandi pengguna setelah kata sandi saat ini diperiksa.
+ * Konsep Laravel: Authentication, Validation Error Bag dan Hashing.
+ */
 class PasswordController extends Controller
 {
     /**
-     * Update the user's password.
+     * Memvalidasi kata sandi saat ini dan konfirmasi sebelum menyimpan hash kata sandi baru.
+     * Konsep Laravel: Authentication, Validation Error Bag dan Hashing.
      */
     public function update(Request $request): RedirectResponse
     {

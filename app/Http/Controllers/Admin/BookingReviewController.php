@@ -7,10 +7,18 @@ use App\Http\Controllers\Admin\Concerns\RespondsWithMasterData;
 use App\Http\Requests\ReviewBookingRequest;
 use App\Services\BookingManagement;
 
+/**
+ * Menangani satu aksi pemeriksaan pengajuan booking oleh administrator.
+ * Konsep Laravel: Invokable Controller, Form Request dan Service Layer.
+ */
 class BookingReviewController extends Controller
 {
     use RespondsWithMasterData;
 
+    /**
+     * Meneruskan keputusan tervalidasi ke service booking lalu mengembalikan respons master data.
+     * Konsep Laravel: Invokable Controller, Form Request dan Service Layer.
+     */
     public function __invoke(ReviewBookingRequest $request, int $booking, BookingManagement $management)
     {
         $data = $request->validated();

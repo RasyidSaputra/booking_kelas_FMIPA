@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Membaca, memvalidasi, memeriksa duplikat dan bentrok, lalu menyimpan impor jadwal secara utuh.
+ * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+ */
 class LectureScheduleCsvImport
 {
     public const HEADERS = [
@@ -18,8 +22,16 @@ class LectureScheduleCsvImport
 
     public const MAX_ROWS = 200;
 
+    /**
+     * Menyediakan kerangka aksi __construct; method ini belum berisi implementasi.
+     * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+     */
     public function __construct(private LectureScheduleManagement $management) {}
 
+    /**
+     * Membaca CSV dengan pemeriksaan header, pemisah, BOM, jumlah kolom, dan batas jumlah baris.
+     * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+     */
     public function read(UploadedFile $file): array
     {
         $handle = fopen($file->getRealPath(), 'r');
@@ -85,6 +97,10 @@ class LectureScheduleCsvImport
         }
     }
 
+    /**
+     * Memetakan ruangan dan dosen, memvalidasi baris, lalu menandai baris siap impor, duplikat, atau bentrok.
+     * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+     */
     public function inspect(array $sources, bool $locking = false): array
     {
         // Konfirmasi mengunci ruangan lebih dahulu, mengikuti urutan lock proses booking.
@@ -182,6 +198,10 @@ class LectureScheduleCsvImport
         ];
     }
 
+    /**
+     * Memeriksa ulang dengan lock dan menyimpan seluruh baris valid dalam satu transaksi.
+     * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+     */
     public function commit(array $sources, int $actor): array
     {
         return DB::transaction(function () use ($sources, $actor): array {
@@ -210,6 +230,10 @@ class LectureScheduleCsvImport
         }, 3);
     }
 
+    /**
+     * Mengelompokkan jadwal disetujui per ruangan dan tanggal untuk pemeriksaan bentrok impor.
+     * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+     */
     private function bookedIntervals(array $rows, bool $locking): array
     {
         $occurrences = collect($rows)->flatMap(fn ($row) => $row['occurrences']);
@@ -236,6 +260,10 @@ class LectureScheduleCsvImport
         return $intervals;
     }
 
+    /**
+     * Membentuk sidik jari pola jadwal untuk mendeteksi duplikat di berkas maupun database.
+     * Konsep Laravel: Helper PHP pada Service Layer buatan aplikasi.
+     */
     private function fingerprint(array $data): string
     {
         return hash('sha256', json_encode([
@@ -245,17 +273,29 @@ class LectureScheduleCsvImport
         ]));
     }
 
+    /**
+     * Menyeragamkan huruf kecil dan spasi sebelum pencocokan identitas atau deteksi duplikat.
+     * Konsep Laravel: Helper PHP pada Service Layer buatan aplikasi.
+     */
     private function normalize(string $value): string
     {
         return mb_strtolower(preg_replace('/\s+/u', ' ', trim($value)));
     }
 
+    /**
+     * Menyeragamkan jam CSV yang didukung menjadi format HH:mm.
+     * Konsep Laravel: Helper PHP pada Service Layer buatan aplikasi.
+     */
     private function time(string $value): string
     {
         return preg_match('/^(\d{1,2}):(\d{2})(?::00)?$/', $value, $matches)
             ? sprintf('%02d:%s', (int) $matches[1], $matches[2]) : $value;
     }
 
+    /**
+     * Menghentikan pembacaan dengan kesalahan validasi pada kolom unggahan CSV.
+     * Konsep Laravel: Service Layer (pola aplikasi), Validation dan Database Transaction.
+     */
     private function invalidFile(string $message): never
     {
         throw ValidationException::withMessages(['csv_file' => $message]);

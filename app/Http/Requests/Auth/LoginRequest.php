@@ -10,10 +10,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Memvalidasi identitas login dan membatasi percobaan autentikasi yang gagal.
+ * Konsep Laravel: Form Request, Authentication dan Rate Limiting.
+ */
 class LoginRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Mengizinkan validasi request dilanjutkan; pembatasan akses lainnya mengikuti middleware route.
+     * Konsep Laravel: Form Request Authorization, authorize().
      */
     public function authorize(): bool
     {
@@ -21,7 +26,8 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Menetapkan aturan validasi NIM/NIP dan kata sandi untuk login.
+     * Konsep Laravel: Form Request Validation, rules().
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -33,6 +39,10 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    /**
+     * Menyediakan pesan kesalahan validasi dalam bahasa Indonesia.
+     * Konsep Laravel: Form Request, custom validation messages.
+     */
     public function messages(): array
     {
         return [
@@ -45,7 +55,8 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Memeriksa batas percobaan, mencoba login dengan NIM/NIP, dan memperbarui penghitung kegagalan.
+     * Konsep Laravel: Form Request, Authentication dan Rate Limiting.
      *
      * @throws ValidationException
      */
@@ -65,7 +76,8 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Ensure the login request is not rate limited.
+     * Menolak percobaan login ketika batas tercapai serta memicu event Lockout.
+     * Konsep Laravel: Form Request, Authentication dan Rate Limiting.
      *
      * @throws ValidationException
      */
@@ -88,7 +100,8 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Membentuk kunci pembatasan percobaan dari identitas pengguna dan alamat IP.
+     * Konsep Laravel: Form Request, Authentication dan Rate Limiting.
      */
     public function throttleKey(): string
     {

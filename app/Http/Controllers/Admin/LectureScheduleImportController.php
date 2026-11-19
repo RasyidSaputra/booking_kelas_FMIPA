@@ -11,10 +11,18 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Mengelola template, pratinjau, dan konfirmasi impor CSV jadwal kuliah.
+ * Konsep Laravel: Controller (MVC), Session, Validation dan Streamed Response.
+ */
 class LectureScheduleImportController extends Controller
 {
     private const SESSION_KEY = 'lecture_schedule_import';
 
+    /**
+     * Menampilkan pratinjau CSV dari session setelah memeriksa pemilik dan masa berlaku pratinjau.
+     * Konsep Laravel: Controller (MVC), Session, Validation dan Streamed Response.
+     */
     public function index(Request $request, LectureScheduleCsvImport $import): View
     {
         $pending = $request->session()->get(self::SESSION_KEY);
@@ -27,6 +35,10 @@ class LectureScheduleImportController extends Controller
         return view('admin.lecture-schedules.import', compact('pending', 'preview'));
     }
 
+    /**
+     * Mengalirkan unduhan template CSV UTF-8 dengan header yang sesuai format importer.
+     * Konsep Laravel: Controller (MVC), Session, Validation dan Streamed Response.
+     */
     public function template(): StreamedResponse
     {
         return response()->streamDownload(function (): void {
@@ -41,6 +53,10 @@ class LectureScheduleImportController extends Controller
         }, 'template-jadwal-kuliah.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
+    /**
+     * Memvalidasi unggahan dan menyimpan baris CSV, token konfirmasi, serta masa berlaku di session.
+     * Konsep Laravel: Controller (MVC), Session, Validation dan Streamed Response.
+     */
     public function preview(Request $request, LectureScheduleCsvImport $import): RedirectResponse
     {
         $request->session()->forget(self::SESSION_KEY);
@@ -59,6 +75,10 @@ class LectureScheduleImportController extends Controller
         return to_route('admin.lecture-schedules.import.index');
     }
 
+    /**
+     * Memeriksa token, pemilik, dan masa berlaku pratinjau sebelum meminta service menyimpan impor.
+     * Konsep Laravel: Controller (MVC), Session, Validation dan Streamed Response.
+     */
     public function confirm(Request $request, LectureScheduleCsvImport $import): RedirectResponse
     {
         $request->validate(['token' => ['required', 'string', 'size:40']]);

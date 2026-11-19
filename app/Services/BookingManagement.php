@@ -6,8 +6,16 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Memusatkan aturan booking agar alur web dan API memakai pemeriksaan yang sama.
+ * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+ */
 class BookingManagement
 {
+    /**
+     * Menyimpan pengajuan pending setelah memeriksa waktu, kapasitas, dan bentrok dalam transaksi.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     public function submit(array $data, int $actor): int
     {
         return DB::transaction(function () use ($data, $actor): int {
@@ -31,6 +39,10 @@ class BookingManagement
         }, 3);
     }
 
+    /**
+     * Merevisi booking milik peminjam; booking yang sudah disetujui diajukan ulang untuk persetujuan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     public function reviseForOwner(int $id, array $data, int $actor): bool
     {
         return DB::transaction(function () use ($id, $data, $actor): bool {
@@ -60,6 +72,10 @@ class BookingManagement
         }, 3);
     }
 
+    /**
+     * Membatalkan booking milik peminjam tanpa menghapus riwayat atau pengecualian pertemuan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     public function cancelForOwner(int $id, int $actor): void
     {
         DB::transaction(function () use ($id, $actor): void {
@@ -71,6 +87,10 @@ class BookingManagement
         }, 3);
     }
 
+    /**
+     * Mengunci ruangan dan booking, lalu memeriksa kepemilikan, status, dan batas waktu perubahan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     private function lockForOwner(int $id, int $actor): array
     {
         $snapshot = DB::table('bookings')->find($id);
@@ -98,6 +118,10 @@ class BookingManagement
         return [$booking, $room];
     }
 
+    /**
+     * Membuat atau mengubah jadwal disetujui, termasuk pertemuan kuliah, setelah memeriksa ketersediaan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     public function saveSchedule(array $data, int $actor, ?int $id = null, ?int $lectureScheduleId = null): void
     {
         DB::transaction(function () use ($data, $actor, $id, $lectureScheduleId): void {
@@ -142,6 +166,10 @@ class BookingManagement
         }, 3);
     }
 
+    /**
+     * Menyetujui atau menolak pengajuan pending dan mencatat pemeriksa serta alasan penolakan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     public function review(int $id, string $decision, ?string $reason, int $actor): void
     {
         DB::transaction(function () use ($id, $decision, $reason, $actor): void {
@@ -164,6 +192,10 @@ class BookingManagement
         }, 3);
     }
 
+    /**
+     * Membatalkan jadwal melalui admin dan mencatat pemeriksa tanpa menghapus riwayat.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     public function cancel(int $id, int $actor): void
     {
         DB::transaction(function () use ($id, $actor): void {
@@ -186,6 +218,10 @@ class BookingManagement
         }, 3);
     }
 
+    /**
+     * Menolak ruangan nonaktif, peserta berlebih, jam di luar operasional, atau bentrok jadwal disetujui.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     private function checkAvailability(?object $room, array $data, ?int $ignore = null): void
     {
         if (! $room || ! $room->is_active) {
@@ -218,6 +254,10 @@ class BookingManagement
         }
     }
 
+    /**
+     * Memastikan status booking sesuai prasyarat sebelum perubahan dilanjutkan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     private function requireStatus(object $booking, string $expected): void
     {
         if ($booking->status !== $expected) {
@@ -225,6 +265,10 @@ class BookingManagement
         }
     }
 
+    /**
+     * Menghentikan proses dengan ValidationException yang dikaitkan ke kolom tertentu.
+     * Konsep Laravel: Service Layer (pola aplikasi), Query Builder dan Database Transaction.
+     */
     private function invalid(string $field, string $message): never
     {
         throw ValidationException::withMessages([$field => $message]);

@@ -8,6 +8,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Booking pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class BookingTest extends TestCase
 {
     use RefreshDatabase;
@@ -15,6 +19,10 @@ class BookingTest extends TestCase
     private User $user;
     private int $roomId;
 
+    /**
+     * Menyiapkan akun, ruangan, atau data awal yang diperlukan sebelum setiap skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +39,10 @@ class BookingTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan halaman booking menampilkan tombol pengelolaan yang tersedia bagi pengguna.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_can_view_bookings_page_with_action_buttons(): void
     {
         $tomorrow = Carbon::tomorrow();
@@ -54,6 +66,10 @@ class BookingTest extends TestCase
             ->assertSee('Batalkan');
     }
 
+    /**
+     * Memastikan pemilik dapat membatalkan pengajuan pending.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_can_cancel_pending_booking(): void
     {
         $tomorrow = Carbon::tomorrow();
@@ -80,6 +96,10 @@ class BookingTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan pemilik dapat membatalkan booking disetujui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_can_cancel_approved_booking(): void
     {
         $tomorrow = Carbon::tomorrow();
@@ -106,6 +126,10 @@ class BookingTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan pengguna tidak dapat membatalkan booking milik orang lain.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_cannot_cancel_other_users_booking(): void
     {
         $otherUser = User::factory()->create(['role' => 'mahasiswa', 'identity_number' => '87654321']);
@@ -132,6 +156,10 @@ class BookingTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan pemilik dapat merevisi waktu pengajuan pending.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_can_revise_booking_time_for_pending_booking(): void
     {
         $tomorrow = Carbon::tomorrow();
@@ -168,6 +196,10 @@ class BookingTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan revisi booking disetujui mengubahnya menjadi pending untuk persetujuan ulang.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_revising_approved_booking_reverts_status_to_pending_for_reapproval(): void
     {
         $tomorrow = Carbon::tomorrow();
@@ -207,6 +239,10 @@ class BookingTest extends TestCase
         ]);
     }
 
+    /**
+     * Memastikan revisi pemilik tidak dapat berbenturan dengan jadwal yang sudah disetujui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_cannot_revise_booking_to_conflicting_approved_slot(): void
     {
         $tomorrow = Carbon::tomorrow();

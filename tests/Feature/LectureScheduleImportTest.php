@@ -13,6 +13,10 @@ use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Lecture Schedule Import pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class LectureScheduleImportTest extends TestCase
 {
     use RefreshDatabase;
@@ -23,6 +27,10 @@ class LectureScheduleImportTest extends TestCase
 
     private int $room;
 
+    /**
+     * Menyiapkan akun, ruangan, atau data awal yang diperlukan sebelum setiap skenario pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,6 +44,10 @@ class LectureScheduleImportTest extends TestCase
         $this->actingAs($this->admin);
     }
 
+    /**
+     * Memastikan admin dapat mengunduh template CSV dan membuka formulir impor.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_downloads_a_csv_template_and_can_open_the_import_form(): void
     {
         $this->get('/admin/lecture-schedules')->assertOk()->assertSeeText('Impor CSV');
@@ -46,6 +58,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertStringContainsString('NIP_DOSEN_TERDAFTAR', $content);
     }
 
+    /**
+     * Memastikan pratinjau tidak menulis data dan konfirmasi mengimpor beberapa pola mingguan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_preview_is_read_only_and_confirmation_imports_multiple_weekly_patterns(): void
     {
         $token = $this->upload([$this->row(), $this->row(['hari' => 'Selasa', 'mata_kuliah_kelas' => 'Fisika - Kelas B'])]);
@@ -63,6 +79,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertNull(session('lecture_schedule_import'));
     }
 
+    /**
+     * Memastikan duplikat dalam satu berkas atau unggahan ulang tidak menggandakan jadwal.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_duplicates_in_one_file_and_subsequent_uploads_do_not_multiply_schedules(): void
     {
         $rows = [$this->row(), $this->row(['kode_ruangan' => 'csv-101', 'hari' => '1', 'mulai' => '8:00:00', 'mata_kuliah_kelas' => ' kalkulus   - kelas a '])];
@@ -79,6 +99,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 4);
     }
 
+    /**
+     * Memastikan pola yang dibuat manual dan kemudian dihentikan tetap terdeteksi sebagai duplikat.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_duplicates_are_also_detected_for_patterns_created_manually_and_later_stopped(): void
     {
         $this->post('/admin/lecture-schedules', [
@@ -98,6 +122,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertSame(0, DB::table('bookings')->where('status', 'approved')->count());
     }
 
+    /**
+     * Memastikan baris bertumpang tindih dilaporkan dan menggagalkan seluruh impor.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_overlapping_rows_are_reported_and_prevent_the_entire_import(): void
     {
         $token = $this->upload([$this->row(), $this->row(['mata_kuliah_kelas' => 'Fisika - Kelas B', 'mulai' => '09:00', 'selesai' => '11:00'])]);
@@ -108,6 +136,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Memastikan jadwal tersimpan diperiksa ulang setelah pratinjau.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_existing_bookings_are_checked_again_after_preview(): void
     {
         $token = $this->upload([$this->row()]);
@@ -119,6 +151,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 1);
     }
 
+    /**
+     * Memastikan pola yang dibuat setelah pratinjau dilewati sebagai duplikat saat konfirmasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_a_schedule_created_after_preview_is_skipped_as_a_duplicate_on_confirmation(): void
     {
         $token = $this->upload([$this->row()]);
@@ -130,6 +166,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 4);
     }
 
+    /**
+     * Memastikan waktu bersebelahan dan pengajuan pending tidak menghalangi impor.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_adjacent_times_and_pending_bookings_do_not_block_the_import(): void
     {
         $this->approvedBooking();
@@ -144,6 +184,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 6);
     }
 
+    /**
+     * Memastikan kapasitas dan status ruangan diperiksa ulang saat konfirmasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_capacity_and_room_status_are_checked_again_when_confirming(): void
     {
         foreach ([['capacity' => 30], ['capacity' => 50, 'is_active' => false]] as $change) {
@@ -156,13 +200,25 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Memastikan kegagalan penyimpanan pola kedua membatalkan pola pertama beserta pertemuannya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_failure_during_the_second_save_rolls_back_the_first_pattern_and_meetings(): void
     {
         $token = $this->upload([$this->row(), $this->row(['hari' => 'Selasa'])]);
+        /**
+         * Mengganti service dengan test double untuk mensimulasikan kegagalan dan memeriksa rollback.
+         * Konsep Laravel: Dependency Injection dan Test Double dalam Feature Test.
+         */
         $manager = new class(app(BookingManagement::class)) extends LectureScheduleManagement
         {
             private int $saved = 0;
 
+            /**
+             * Mensimulasikan kegagalan penyimpanan pertemuan untuk memastikan transaksi impor di-rollback.
+             * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+             */
             public function save(array $data, int $actor, ?int $id = null): int
             {
                 if (++$this->saved === 2) {
@@ -178,6 +234,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Memastikan CSV bertitik koma dengan BOM dan urutan header berbeda tetap didukung.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_semicolon_csv_with_bom_and_reordered_headers_is_supported(): void
     {
         $headers = array_reverse(LectureScheduleCsvImport::HEADERS);
@@ -188,6 +248,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseHas('lecture_schedules', ['purpose' => 'Kalkulus, kelas "A"; pagi', 'user_id' => $this->lecturer->id]);
     }
 
+    /**
+     * Memastikan baris tidak valid memiliki pesan terbaca dan tidak menulis data.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     #[DataProvider('invalidRows')]
     public function test_invalid_rows_have_readable_errors_and_never_write_data(array $changes, string $message): void
     {
@@ -198,6 +262,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('bookings', 0);
     }
 
+    /**
+     * Menyediakan variasi baris CSV yang harus ditolak oleh importer.
+     * Konsep Laravel: PHPUnit Data Provider untuk Feature Test.
+     */
     public static function invalidRows(): array
     {
         return [
@@ -213,12 +281,20 @@ class LectureScheduleImportTest extends TestCase
         ];
     }
 
+    /**
+     * Memastikan markup dari CSV di-escape pada pratinjau.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_preview_escapes_uploaded_markup(): void
     {
         $this->upload([$this->row(['mata_kuliah_kelas' => '<script>alert(1)</script>'])]);
         $this->get('/admin/lecture-schedules/import')->assertOk()->assertSee('&lt;script&gt;', false)->assertDontSee('<script>alert(1)</script>', false);
     }
 
+    /**
+     * Memastikan header rusak, berkas kosong, dan jumlah baris berlebih ditolak.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_malformed_headers_empty_files_and_too_many_rows_are_rejected(): void
     {
         foreach ([
@@ -231,6 +307,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('lecture_schedules', 0);
     }
 
+    /**
+     * Memastikan unggahan pengganti yang salah membatalkan pratinjau sebelumnya.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_a_bad_replacement_upload_invalidates_the_previous_preview(): void
     {
         $token = $this->upload([$this->row()]);
@@ -240,6 +320,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('lecture_schedules', 0);
     }
 
+    /**
+     * Memastikan pratinjau kedaluwarsa, dimanipulasi, atau milik admin lain tidak dapat dikonfirmasi.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_expired_tampered_and_other_admin_previews_cannot_be_confirmed(): void
     {
         $token = $this->upload([$this->row()]);
@@ -253,6 +337,10 @@ class LectureScheduleImportTest extends TestCase
         $this->assertDatabaseCount('lecture_schedules', 0);
     }
 
+    /**
+     * Memastikan hanya admin dapat mengunduh template, membuat pratinjau, dan mengonfirmasi impor.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_only_admins_can_download_preview_and_confirm_imports(): void
     {
         foreach (['mahasiswa', 'dosen'] as $role) {
@@ -264,6 +352,10 @@ class LectureScheduleImportTest extends TestCase
         }
     }
 
+    /**
+     * Mengirim berkas CSV pengujian ke endpoint pratinjau impor.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function upload(array $rows): string
     {
         $this->post('/admin/lecture-schedules/import/preview', ['csv_file' => $this->csv($rows)])
@@ -272,6 +364,10 @@ class LectureScheduleImportTest extends TestCase
         return session('lecture_schedule_import.token');
     }
 
+    /**
+     * Menyediakan satu baris CSV valid dengan nilai yang dapat ditimpa untuk pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function row(array $changes = []): array
     {
         return array_replace([
@@ -281,6 +377,10 @@ class LectureScheduleImportTest extends TestCase
         ], $changes);
     }
 
+    /**
+     * Membentuk unggahan CSV uji dengan pilihan pemisah dan susunan header.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function csv(array $rows, string $delimiter = ',', ?array $headers = null): UploadedFile
     {
         $headers ??= LectureScheduleCsvImport::HEADERS;
@@ -297,6 +397,10 @@ class LectureScheduleImportTest extends TestCase
         return UploadedFile::fake()->createWithContent('jadwal.csv', $content);
     }
 
+    /**
+     * Menyiapkan booking disetujui untuk menguji deteksi bentrok impor.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function approvedBooking(): void
     {
         DB::table('bookings')->insert([

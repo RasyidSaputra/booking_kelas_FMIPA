@@ -5,10 +5,15 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Mengubah role peminjam lama menjadi mahasiswa lalu membatasi role ke admin, dosen, dan mahasiswa.
+ * Konsep Laravel: Database Migration (anonymous class), Schema Builder.
+ */
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Mengubah role peminjam lama menjadi mahasiswa lalu membatasi role ke admin, dosen, dan mahasiswa.
+     * Konsep Laravel: Database Migration, Schema Builder / perubahan data pada up().
      */
     public function up(): void
     {
@@ -27,7 +32,8 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Menggabungkan role dosen dan mahasiswa menjadi peminjam untuk mengembalikan skema role lama.
+     * Konsep Laravel: Database Migration, Rollback melalui down().
      */
     public function down(): void
     {

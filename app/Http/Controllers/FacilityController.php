@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Facility;
 use Illuminate\Http\Request;
 
+/**
+ * Menyiapkan kerangka CRUD fasilitas; seluruh aksi masih kosong.
+ * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
+ */
 class FacilityController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menyediakan kerangka aksi index; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function index()
     {
@@ -16,7 +21,8 @@ class FacilityController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menyediakan kerangka aksi create; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function create()
     {
@@ -24,7 +30,8 @@ class FacilityController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyediakan kerangka aksi store; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function store(Request $request)
     {
@@ -32,7 +39,8 @@ class FacilityController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Menyediakan kerangka aksi show; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function show(Facility $facility)
     {
@@ -40,7 +48,8 @@ class FacilityController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menyediakan kerangka aksi edit; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function edit(Facility $facility)
     {
@@ -48,7 +57,8 @@ class FacilityController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Menyediakan kerangka aksi update; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function update(Request $request, Facility $facility)
     {
@@ -56,7 +66,8 @@ class FacilityController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menyediakan kerangka aksi destroy; method ini belum berisi implementasi.
+     * Konsep Laravel: Resource Controller (MVC); kerangka belum diimplementasikan.
      */
     public function destroy(Facility $facility)
     {

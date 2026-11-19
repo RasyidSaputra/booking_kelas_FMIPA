@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
+ * Mendefinisikan factory data User untuk seeding atau pengujian.
+ * Konsep Laravel: Eloquent Model Factory dan Faker.
+ *
  * @extends Factory<User>
  */
 class UserFactory extends Factory
@@ -18,7 +21,8 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
+     * Menghasilkan akun mahasiswa uji dengan Faker, email unik, dan kata sandi yang di-hash.
+     * Konsep Laravel: Eloquent Model Factory dan Faker.
      *
      * @return array<string, mixed>
      */
@@ -35,7 +39,8 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Menyediakan state pengguna dengan email yang belum diverifikasi.
+     * Konsep Laravel: Eloquent Factory State.
      */
     public function unverified(): static
     {

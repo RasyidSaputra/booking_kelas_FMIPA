@@ -9,10 +9,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
+/**
+ * Mengelola login dan logout pengguna melalui sesi browser.
+ * Konsep Laravel: Authentication, Session dan Controller Laravel Breeze.
+ */
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Menampilkan formulir login Blade.
+     * Konsep Laravel: Authentication, Session dan Controller Laravel Breeze.
      */
     public function create(): View
     {
@@ -20,7 +25,8 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Mengautentikasi kredensial, meregenerasi session, dan mengarahkan ke halaman tujuan atau dashboard.
+     * Konsep Laravel: Authentication, Session dan Controller Laravel Breeze.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -32,7 +38,8 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Destroy an authenticated session.
+     * Mengakhiri login web, membatalkan session, dan meregenerasi token CSRF.
+     * Konsep Laravel: Authentication, Session dan Controller Laravel Breeze.
      */
     public function destroy(Request $request): RedirectResponse
     {

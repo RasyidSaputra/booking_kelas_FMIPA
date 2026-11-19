@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Menyajikan formulir dan mengirim tautan pemulihan kata sandi.
+ * Konsep Laravel: Password Reset, Password Broker dan Notifications.
+ */
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Display the password reset link request view.
+     * Menampilkan formulir permintaan tautan reset kata sandi.
+     * Konsep Laravel: Password Reset, Password Broker dan Notifications.
      */
     public function create(): View
     {
@@ -20,7 +25,8 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Handle an incoming password reset link request.
+     * Memvalidasi email dan meminta Password Broker mengirim tautan pemulihan.
+     * Konsep Laravel: Password Reset, Password Broker dan Notifications.
      *
      * @throws ValidationException
      */

@@ -4,13 +4,25 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Memvalidasi data pengajuan, tanggal, jam operasional, dan jumlah peserta.
+ * Konsep Laravel: Form Request, Authorization dan Validation.
+ */
 class StoreBookingRequest extends FormRequest
 {
+    /**
+     * Mengizinkan pengajuan hanya jika request memiliki pengguna terautentikasi.
+     * Konsep Laravel: Form Request Authorization, authorize().
+     */
     public function authorize(): bool
     {
         return $this->user() !== null;
     }
 
+    /**
+     * Menetapkan aturan validasi ruangan, tanggal, jam operasional, tujuan, dan jumlah peserta.
+     * Konsep Laravel: Form Request Validation, rules().
+     */
     public function rules(): array
     {
         return [

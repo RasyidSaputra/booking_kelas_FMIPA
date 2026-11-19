@@ -4,8 +4,16 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Membuat tabel pola kuliah mingguan dan menghubungkannya dengan pertemuan pada tabel bookings.
+ * Konsep Laravel: Database Migration (anonymous class), Schema Builder.
+ */
 return new class extends Migration
 {
+    /**
+     * Membuat tabel pola kuliah mingguan dan menghubungkannya dengan pertemuan pada tabel bookings.
+     * Konsep Laravel: Database Migration, Schema Builder / perubahan data pada up().
+     */
     public function up(): void
     {
         Schema::create('lecture_schedules', function (Blueprint $table) {
@@ -31,6 +39,10 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Melepas hubungan booking dengan pola kuliah lalu menghapus tabel pola mingguan.
+     * Konsep Laravel: Database Migration, Rollback melalui down().
+     */
     public function down(): void
     {
         Schema::table('bookings', function (Blueprint $table) {

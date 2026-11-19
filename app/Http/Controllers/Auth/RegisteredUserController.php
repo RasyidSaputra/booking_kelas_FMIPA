@@ -12,10 +12,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Mendaftarkan akun mahasiswa dan membuat sesi login setelah pendaftaran.
+ * Konsep Laravel: Registration, Eloquent, Authentication dan Events.
+ */
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view.
+     * Menampilkan formulir pendaftaran akun.
+     * Konsep Laravel: Registration, Eloquent, Authentication dan Events.
      */
     public function create(): View
     {
@@ -23,7 +28,8 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle an incoming registration request.
+     * Membuat akun mahasiswa, memicu event Registered, dan membuat sesi login pengguna baru.
+     * Konsep Laravel: Registration, Eloquent, Authentication dan Events.
      *
      * @throws ValidationException
      */

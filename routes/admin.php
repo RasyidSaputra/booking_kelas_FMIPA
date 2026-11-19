@@ -10,6 +10,10 @@ use App\Http\Controllers\Admin\ScheduleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Mendaftarkan route master data dan jadwal yang dibatasi Gate administrator.
+ * Konsep Laravel: Route Prefix, Named Route Group dan Authorization Middleware.
+ */
 Route::prefix('admin')->name('admin.')->middleware('can:view-room-master')->group(function () {
     Route::get('/rooms', RoomMasterController::class)->name('rooms.index');
 

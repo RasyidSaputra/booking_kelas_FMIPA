@@ -6,10 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Mengirim ulang pemberitahuan verifikasi alamat email pengguna.
+ * Konsep Laravel: Email Verification, Notifications dan Controller.
+ */
 class EmailVerificationNotificationController extends Controller
 {
     /**
-     * Send a new email verification notification.
+     * Mengirim ulang notifikasi verifikasi jika email pengguna belum terverifikasi.
+     * Konsep Laravel: Email Verification, Notifications dan Controller.
      */
     public function store(Request $request): RedirectResponse
     {

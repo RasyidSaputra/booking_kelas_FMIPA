@@ -7,10 +7,15 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * Menyiapkan akun contoh dengan identitas dan role untuk simulasi aplikasi.
+ * Konsep Laravel: Database Seeder, Query Builder / Eloquent untuk data contoh.
+ */
 class UserSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Menyiapkan akun contoh dengan identitas dan role untuk simulasi aplikasi.
+     * Konsep Laravel: Database Seeder, Query Builder / Eloquent untuk data contoh.
      */
     public function run(): void
     {

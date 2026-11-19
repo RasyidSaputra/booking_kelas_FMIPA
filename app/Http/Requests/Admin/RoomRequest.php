@@ -4,8 +4,16 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Validation\Rule;
 
+/**
+ * Memvalidasi data ruangan, foto, kapasitas, dan daftar fasilitas dari administrator.
+ * Konsep Laravel: Form Request, File Validation, Array Validation dan Unique Rule.
+ */
 class RoomRequest extends MasterRequest
 {
+    /**
+     * Menetapkan aturan validasi identitas ruangan, kapasitas, foto, dan daftar fasilitas.
+     * Konsep Laravel: Form Request Validation, rules().
+     */
     public function rules(): array
     {
         return [

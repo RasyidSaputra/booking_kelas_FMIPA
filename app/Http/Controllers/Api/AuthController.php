@@ -9,8 +9,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Menyediakan login, identitas pengguna, dan logout untuk klien API.
+ * Konsep Laravel: API Controller, Laravel Sanctum dan API Resource.
+ */
 class AuthController extends Controller
 {
+    /**
+     * Memvalidasi NIM/NIP dan kata sandi lalu menerbitkan token Bearer Sanctum yang berlaku tujuh hari.
+     * Konsep Laravel: API Controller, Laravel Sanctum dan API Resource.
+     */
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -33,11 +41,19 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Mengembalikan identitas pengguna terautentikasi melalui UserResource.
+     * Konsep Laravel: API Controller, Laravel Sanctum dan API Resource.
+     */
     public function me(Request $request): UserResource
     {
         return new UserResource($request->user());
     }
 
+    /**
+     * Mencabut hanya token API yang dipakai untuk permintaan logout ini.
+     * Konsep Laravel: API Controller, Laravel Sanctum dan API Resource.
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()?->delete();

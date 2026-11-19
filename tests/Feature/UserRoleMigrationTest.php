@@ -9,10 +9,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian User Role Migration pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class UserRoleMigrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan akun peminjam lama dikonversi dan akun lain dipertahankan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_existing_borrowers_are_converted_and_other_accounts_are_preserved(): void
     {
         // Simulasikan database transisi yang masih memiliki nilai peminjam.

@@ -6,10 +6,22 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Mengubah pola kuliah mingguan menjadi booking bertanggal serta menjaga riwayat dan pengecualian.
+ * Konsep Laravel: Service Layer (pola aplikasi), Dependency Injection dan Database Transaction.
+ */
 class LectureScheduleManagement
 {
+    /**
+     * Menyediakan kerangka aksi __construct; method ini belum berisi implementasi.
+     * Konsep Laravel: Service Layer (pola aplikasi), Dependency Injection dan Database Transaction.
+     */
     public function __construct(private BookingManagement $bookings) {}
 
+    /**
+     * Menyimpan pola mingguan dan membentuk ulang pertemuan mendatang sambil mempertahankan riwayat serta pengecualian.
+     * Konsep Laravel: Service Layer (pola aplikasi), Dependency Injection dan Database Transaction.
+     */
     public function save(array $data, int $actor, ?int $id = null): int
     {
         return DB::transaction(function () use ($data, $actor, $id): int {
@@ -66,6 +78,10 @@ class LectureScheduleManagement
         }, 3);
     }
 
+    /**
+     * Menghasilkan daftar pertemuan mendatang dari hari kuliah dan rentang tanggal pola mingguan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Dependency Injection dan Database Transaction.
+     */
     public function occurrences(array $data, ?CarbonImmutable $from = null): array
     {
         $occurrences = [];
@@ -84,6 +100,10 @@ class LectureScheduleManagement
         return $occurrences;
     }
 
+    /**
+     * Menghentikan pola dan membatalkan pertemuan mendatang mulai tanggal efektif pilihan.
+     * Konsep Laravel: Service Layer (pola aplikasi), Dependency Injection dan Database Transaction.
+     */
     public function cancel(int $id, string $from, int $actor): void
     {
         DB::transaction(function () use ($id, $from, $actor): void {

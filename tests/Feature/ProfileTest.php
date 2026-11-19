@@ -10,10 +10,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Profile pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan halaman profil dapat ditampilkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create(['identity_number' => '00123456789', 'role' => 'mahasiswa']);
@@ -25,6 +33,10 @@ class ProfileTest extends TestCase
         $response->assertOk()->assertSeeText('NIM / NIP')->assertSeeText('00123456789')->assertSeeText('Mahasiswa');
     }
 
+    /**
+     * Memastikan informasi profil dapat diperbarui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_profile_information_can_be_updated(): void
     {
         $user = User::factory()->create();
@@ -49,6 +61,10 @@ class ProfileTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    /**
+     * Memastikan status verifikasi tetap sama jika alamat email tidak berubah.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
         $user = User::factory()->create(['identity_number' => '00123456789']);
@@ -68,12 +84,20 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    /**
+     * Memastikan tamu tidak dapat mengakses atau memperbarui profil.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_guests_cannot_access_or_update_a_profile(): void
     {
         $this->get('/profile')->assertRedirect(route('login'));
         $this->patch('/profile', [])->assertRedirect(route('login'));
     }
 
+    /**
+     * Memastikan NIM/NIP dan email harus unik.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_identity_number_and_email_must_be_unique(): void
     {
         $user = User::factory()->create(['identity_number' => '00111111111']);
@@ -90,6 +114,10 @@ class ProfileTest extends TestCase
         $this->assertSame($user->name, $user->fresh()->name);
     }
 
+    /**
+     * Memastikan penyimpanan profil mewajibkan NIM/NIP.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_identity_number_is_required_when_saving_a_profile(): void
     {
         $user = User::factory()->create();
@@ -101,6 +129,10 @@ class ProfileTest extends TestCase
         ])->assertSessionHasErrors('identity_number');
     }
 
+    /**
+     * Memastikan peminjam tidak dapat menaikkan role melalui profil.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_borrower_cannot_promote_their_role_through_profile(): void
     {
         $user = User::factory()->create(['role' => 'mahasiswa']);
@@ -116,6 +148,10 @@ class ProfileTest extends TestCase
         $this->assertNull($user->fresh()->identity_number);
     }
 
+    /**
+     * Memastikan role admin tidak dapat diubah melalui profil.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_role_cannot_be_changed_through_profile(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
@@ -130,6 +166,10 @@ class ProfileTest extends TestCase
         $this->assertSame('admin', $user->fresh()->role);
     }
 
+    /**
+     * Memastikan perubahan hanya menyentuh akun yang masuk dan kolom yang diizinkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_profile_only_updates_the_logged_in_user_and_allowed_fields(): void
     {
         $user = User::factory()->create();
@@ -150,6 +190,10 @@ class ProfileTest extends TestCase
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 
+    /**
+     * Memastikan akun dengan riwayat peminjaman tidak dapat dihapus.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_an_account_with_booking_history_cannot_be_deleted(): void
     {
         $user = User::factory()->create();
@@ -163,6 +207,10 @@ class ProfileTest extends TestCase
         $this->assertDatabaseCount('bookings', 1);
     }
 
+    /**
+     * Memastikan akun dengan riwayat pemeriksaan tidak dapat dihapus.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_an_account_with_review_history_cannot_be_deleted(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -177,6 +225,10 @@ class ProfileTest extends TestCase
         $this->assertDatabaseCount('bookings', 1);
     }
 
+    /**
+     * Memastikan pengguna dapat menghapus akun miliknya jika memenuhi persyaratan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_user_can_delete_their_account(): void
     {
         $user = User::factory()->create();
@@ -195,6 +247,10 @@ class ProfileTest extends TestCase
         $this->assertNull($user->fresh());
     }
 
+    /**
+     * Memastikan penghapusan akun memerlukan kata sandi yang benar.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
         $user = User::factory()->create();
@@ -213,6 +269,10 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->fresh());
     }
 
+    /**
+     * Membuat riwayat booking dengan pemilik dan reviewer untuk pengujian penghapusan profil.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function createBooking(User $owner, ?User $reviewer = null): void
     {
         $room = DB::table('rooms')->insertGetId([
@@ -228,11 +288,19 @@ class ProfileTest extends TestCase
             'reviewed_by' => $reviewer?->id, 'created_at' => now(), 'updated_at' => now(),
         ]);
     }
+    /**
+     * Menyediakan data profil pengguna beserta penyesuaian untuk pengujian.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function profileData(User $user, array $extra = []): array
     {
         return array_merge(['name' => $user->name, 'identity_number' => $user->identity_number ?? '123', 'email' => $user->email], $extra);
     }
 
+    /**
+     * Memastikan avatar dapat diunggah dan ditampilkan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_avatar_can_be_uploaded_and_is_shown(): void
     {
         Storage::fake('public');
@@ -249,6 +317,10 @@ class ProfileTest extends TestCase
         $this->actingAs($user)->get('/profile')->assertOk()->assertSee($user->avatarUrl(), false);
     }
 
+    /**
+     * Memastikan penggantian avatar menghapus berkas lama.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_replacing_avatar_deletes_the_old_file(): void
     {
         Storage::fake('public');
@@ -264,6 +336,10 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertExists($new);
     }
 
+    /**
+     * Memastikan avatar dapat dihapus.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_avatar_can_be_removed(): void
     {
         Storage::fake('public');
@@ -277,6 +353,10 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertMissing($path);
     }
 
+    /**
+     * Memastikan avatar tetap disimpan ketika kolom profil lain diperbarui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_avatar_is_kept_when_other_fields_are_updated(): void
     {
         Storage::fake('public');
@@ -289,6 +369,10 @@ class ProfileTest extends TestCase
         $this->assertSame($path, $user->fresh()->avatar_path);
     }
 
+    /**
+     * Memastikan unggahan avatar tidak valid ditolak.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_invalid_avatar_is_rejected(): void
     {
         Storage::fake('public');

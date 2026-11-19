@@ -10,8 +10,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Mengelola pola jadwal kuliah mingguan dan penghentian pertemuan mendatang.
+ * Konsep Laravel: Controller (MVC), Form Request dan Service Layer.
+ */
 class LectureScheduleController extends Controller
 {
+    /**
+     * Menampilkan pola mingguan beserta pagination dan data ruangan serta penanggung jawab untuk formulir.
+     * Konsep Laravel: Controller (MVC), Form Request dan Service Layer.
+     */
     public function index(Request $request): View
     {
         $input = $request->validate(['edit' => ['nullable', 'integer', 'exists:lecture_schedules,id']]);
@@ -26,6 +34,10 @@ class LectureScheduleController extends Controller
         return view('admin.lecture-schedules.index', compact('schedules', 'editing', 'rooms', 'users'));
     }
 
+    /**
+     * Menyimpan pola kuliah baru melalui service lalu mengarahkan ke daftar jadwal.
+     * Konsep Laravel: Controller (MVC), Form Request dan Service Layer.
+     */
     public function store(LectureScheduleRequest $request, LectureScheduleManagement $management): RedirectResponse
     {
         $management->save($request->validated(), $request->user()->id);
@@ -33,6 +45,10 @@ class LectureScheduleController extends Controller
         return to_route('admin.lecture-schedules.index')->with('master_success', 'Jadwal kuliah mingguan berhasil dibuat. Seluruh pertemuan mendatang otomatis memblokir peminjaman.');
     }
 
+    /**
+     * Memperbarui pola melalui service dengan mempertahankan riwayat serta pengecualian pertemuan.
+     * Konsep Laravel: Controller (MVC), Form Request dan Service Layer.
+     */
     public function update(LectureScheduleRequest $request, int $lectureSchedule, LectureScheduleManagement $management): RedirectResponse
     {
         $management->save($request->validated(), $request->user()->id, $lectureSchedule);
@@ -40,6 +56,10 @@ class LectureScheduleController extends Controller
         return to_route('admin.lecture-schedules.index')->with('master_success', 'Pertemuan mendatang berhasil diperbarui. Riwayat dan pengecualian pertemuan tetap disimpan.');
     }
 
+    /**
+     * Memvalidasi tanggal efektif dan meminta service menghentikan pola jadwal mulai tanggal tersebut.
+     * Konsep Laravel: Controller (MVC), Form Request dan Service Layer.
+     */
     public function cancel(Request $request, int $lectureSchedule, LectureScheduleManagement $management): RedirectResponse
     {
         $data = $request->validate(['effective_from' => ['required', 'date_format:Y-m-d', 'after_or_equal:today']]);

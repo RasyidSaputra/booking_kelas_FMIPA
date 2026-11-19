@@ -6,8 +6,16 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * Menentukan kolom booking yang dikirim ke klien API.
+ * Konsep Laravel: API Resource (JsonResource), transformasi respons JSON.
+ */
 class BookingResource extends JsonResource
 {
+    /**
+     * Memilih dan mengonversi atribut booking menjadi struktur respons JSON.
+     * Konsep Laravel: API Resource, serialisasi melalui toArray().
+     */
     public function toArray(Request $request): array
     {
         return [

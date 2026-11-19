@@ -26,6 +26,10 @@ test('create, edit, delete, review and cancel target distinct HTTP actions', () 
     assert.throws(() => masterAction(routes, 'unknown', 1));
 });
 
+/**
+ * Menyiapkan state modal dan pengganti fetch serta DOM untuk pengujian frontend.
+ * Konsep Laravel: Node Test Runner untuk integrasi frontend dengan respons Laravel.
+ */
 function context(t, response) {
     const previous = { fetch: globalThis.fetch, document: globalThis.document, window: globalThis.window, FormData: globalThis.FormData };
     let reloads = 0;

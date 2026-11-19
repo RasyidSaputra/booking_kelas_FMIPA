@@ -7,15 +7,24 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Memvalidasi perubahan profil dan avatar tanpa menerima perubahan role dari formulir profil.
+ * Konsep Laravel: Form Request, Validation, Unique Rule dan File Validation.
+ */
 class ProfileUpdateRequest extends FormRequest
 {
+    /**
+     * Mengizinkan validasi request dilanjutkan; pembatasan akses lainnya mengikuti middleware route.
+     * Konsep Laravel: Form Request Authorization, authorize().
+     */
     public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Menetapkan aturan validasi nama, NIM/NIP, email, avatar, dan larangan perubahan role.
+     * Konsep Laravel: Form Request Validation, rules().
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -43,6 +52,10 @@ class ProfileUpdateRequest extends FormRequest
         ];
     }
 
+    /**
+     * Menyediakan label kolom dalam bahasa Indonesia untuk pesan kesalahan validasi.
+     * Konsep Laravel: Form Request, custom validation attributes.
+     */
     public function attributes(): array
     {
         return [
@@ -53,6 +66,10 @@ class ProfileUpdateRequest extends FormRequest
         ];
     }
 
+    /**
+     * Menyediakan pesan kesalahan validasi dalam bahasa Indonesia.
+     * Konsep Laravel: Form Request, custom validation messages.
+     */
     public function messages(): array
     {
         return [

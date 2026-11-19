@@ -9,10 +9,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Mengelola tambah, ubah, dan hapus fasilitas melalui halaman master admin.
+ * Konsep Laravel: Controller (MVC), Form Request dan Query Builder.
+ */
 class FacilityManagementController extends Controller
 {
     use RespondsWithMasterData;
 
+    /**
+     * Menyimpan fasilitas baru dari input yang sudah divalidasi.
+     * Konsep Laravel: Controller (MVC), Form Request dan Query Builder.
+     */
     public function store(FacilityRequest $request)
     {
         DB::table('facilities')->insert($request->validated() + ['created_at' => now(), 'updated_at' => now()]);
@@ -20,6 +28,10 @@ class FacilityManagementController extends Controller
         return $this->saved($request, 'Fasilitas berhasil ditambahkan.', 'facilities');
     }
 
+    /**
+     * Memastikan fasilitas ada lalu memperbarui nama dari input tervalidasi.
+     * Konsep Laravel: Controller (MVC), Form Request dan Query Builder.
+     */
     public function update(FacilityRequest $request, int $facility)
     {
         abort_unless(DB::table('facilities')->where('id', $facility)->exists(), 404);
@@ -28,6 +40,10 @@ class FacilityManagementController extends Controller
         return $this->saved($request, 'Fasilitas berhasil diperbarui.', 'facilities');
     }
 
+    /**
+     * Mengunci fasilitas dan menolak penghapusan jika masih terhubung dengan ruangan.
+     * Konsep Laravel: Controller (MVC), Form Request dan Query Builder.
+     */
     public function destroy(Request $request, int $facility)
     {
         DB::transaction(function () use ($facility): void {

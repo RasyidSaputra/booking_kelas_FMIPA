@@ -7,10 +7,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian Dashboard pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan tamu diarahkan ke halaman login.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_guests_are_redirected_to_login(): void
     {
         foreach (['/dashboard', '/rooms', '/bookings', '/admin/rooms'] as $url) {
@@ -18,6 +26,10 @@ class DashboardTest extends TestCase
         }
     }
 
+    /**
+     * Memastikan dashboard memakai bulan saat ini dan tidak menampilkan ketersediaan palsu.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_dashboard_defaults_to_the_current_month_and_has_no_fake_availability(): void
     {
         $this->actingAs(User::factory()->create())->get('/dashboard')
@@ -28,6 +40,10 @@ class DashboardTest extends TestCase
             ->assertDontSee('Master data kelas');
     }
 
+    /**
+     * Memastikan filter bulan dan tahun mendukung tahun kabisat.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_month_and_year_filters_support_leap_years(): void
     {
         $this->actingAs(User::factory()->create())->get('/dashboard?month=2&year=2028')
@@ -36,12 +52,20 @@ class DashboardTest extends TestCase
             ->assertViewHas('days', fn (array $days): bool => collect($days)->where('in_month', true)->count() === 29);
     }
 
+    /**
+     * Memastikan filter kalender menolak nilai yang tidak valid.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_calendar_filters_reject_invalid_values(): void
     {
         $this->actingAs(User::factory()->create())->get('/dashboard?month=13&year=1999&date=2026-02-30')
             ->assertSessionHasErrors(['month', 'year', 'date']);
     }
 
+    /**
+     * Memastikan okupansi hanya menghitung ruangan aktif unik dengan booking disetujui.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_occupancy_counts_distinct_active_rooms_with_approved_bookings_only(): void
     {
         $user = User::factory()->create();
@@ -62,6 +86,10 @@ class DashboardTest extends TestCase
             });
     }
 
+    /**
+     * Memastikan warna kalender berubah pada ambang okupansi 40 dan 80 persen.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_calendar_colors_change_at_forty_and_eighty_percent(): void
     {
         $user = User::factory()->create();
@@ -82,6 +110,10 @@ class DashboardTest extends TestCase
             });
     }
 
+    /**
+     * Memastikan booking lintas hari memakai batas akhir eksklusif.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_overnight_bookings_use_exclusive_end_boundaries(): void
     {
         $user = User::factory()->create();
@@ -102,18 +134,30 @@ class DashboardTest extends TestCase
             });
     }
 
+    /**
+     * Memastikan peminjam tidak dapat membuka master ruangan meskipun melalui URL langsung.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_a_borrower_cannot_open_room_master_even_by_direct_url(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'mahasiswa']))
             ->get('/admin/rooms')->assertForbidden();
     }
 
+    /**
+     * Memastikan dosen tidak dapat membuka master ruangan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_a_lecturer_cannot_open_room_master(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'dosen']))
             ->get('/admin/rooms')->assertForbidden();
     }
 
+    /**
+     * Memastikan admin dapat melihat master ruangan termasuk ruangan nonaktif.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_sees_room_master_and_inactive_rooms(): void
     {
         $this->rooms(1, false);
@@ -123,6 +167,10 @@ class DashboardTest extends TestCase
         $this->actingAs($admin)->get('/admin/rooms')->assertOk()->assertSee('Nonaktif');
     }
 
+    /**
+     * Memastikan riwayat booking dibatasi pada pengguna yang sedang masuk.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_booking_history_is_scoped_to_the_logged_in_user(): void
     {
         $user = User::factory()->create();
@@ -137,6 +185,10 @@ class DashboardTest extends TestCase
             ->assertSee('Kegiatan milik saya')->assertDontSee('Kegiatan pribadi pengguna lain');
     }
 
+    /**
+     * Memastikan pencarian hanya mengembalikan ruangan aktif yang sesuai.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_room_search_only_returns_matching_active_rooms(): void
     {
         $rooms = $this->rooms(2);
@@ -150,6 +202,10 @@ class DashboardTest extends TestCase
             ->assertDontSee('Laboratorium Kimia')->assertDontSee('Fisika Nonaktif');
     }
 
+    /**
+     * Menyiapkan beberapa ruangan untuk skenario kalender dashboard.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function rooms(int $count, bool $active = true): array
     {
         $ids = [];
@@ -165,6 +221,10 @@ class DashboardTest extends TestCase
         return $ids;
     }
 
+    /**
+     * Menyimpan booking uji dengan atribut yang dapat disesuaikan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     private function booking(User $user, int $room, string $start, string $end, string $status = 'approved'): int
     {
         return DB::table('bookings')->insertGetId([

@@ -4,13 +4,25 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Menyediakan izin administrator serta label dan pesan validasi bersama untuk master data.
+ * Konsep Laravel: Form Request, Gate Authorization dan pewarisan class.
+ */
 abstract class MasterRequest extends FormRequest
 {
+    /**
+     * Mengizinkan request hanya bagi akun yang lolos Gate view-room-master.
+     * Konsep Laravel: Form Request Authorization, authorize().
+     */
     public function authorize(): bool
     {
         return $this->user()?->can('view-room-master') ?? false;
     }
 
+    /**
+     * Menyediakan label kolom dalam bahasa Indonesia untuk pesan kesalahan validasi.
+     * Konsep Laravel: Form Request, custom validation attributes.
+     */
     public function attributes(): array
     {
         return [
@@ -25,6 +37,10 @@ abstract class MasterRequest extends FormRequest
         ];
     }
 
+    /**
+     * Menyediakan pesan kesalahan validasi dalam bahasa Indonesia.
+     * Konsep Laravel: Form Request, custom validation messages.
+     */
     public function messages(): array
     {
         return [

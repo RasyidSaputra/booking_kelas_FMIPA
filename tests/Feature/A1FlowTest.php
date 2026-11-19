@@ -9,10 +9,18 @@ use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+/**
+ * Mengelompokkan pengujian A1 Flow pada aplikasi.
+ * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+ */
 class A1FlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Memastikan mahasiswa dapat menyelesaikan alur registrasi, login, dashboard, profil, dan logout.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_mahasiswa_can_complete_registration_login_dashboard_profile_and_logout(): void
     {
         $this->get('/register')->assertOk();
@@ -85,6 +93,10 @@ class A1FlowTest extends TestCase
         $this->assertGuest();
     }
 
+    /**
+     * Memastikan mahasiswa dan dosen mendapat HTTP 403 saat mengakses master ruangan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     #[DataProvider('borrowerRoles')]
     public function test_mahasiswa_and_dosen_receive_403_for_room_master(string $role): void
     {
@@ -96,6 +108,10 @@ class A1FlowTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    /**
+     * Memastikan admin dapat login dan mengakses master ruangan.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     public function test_admin_can_log_in_and_view_room_master(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'identity_number' => '00999999999']);
@@ -106,6 +122,10 @@ class A1FlowTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
+    /**
+     * Memastikan filter dan pagination palsu tidak membocorkan riwayat booking pengguna lain.
+     * Konsep Laravel: Feature Test, HTTP Testing dan Database Testing.
+     */
     #[DataProvider('allRoles')]
     public function test_booking_history_remains_private_with_forged_filters_and_pagination(string $role): void
     {
@@ -144,11 +164,19 @@ class A1FlowTest extends TestCase
         }
     }
 
+    /**
+     * Menyediakan variasi role peminjam bagi pengujian akses pengguna.
+     * Konsep Laravel: PHPUnit Data Provider untuk Feature Test.
+     */
     public static function borrowerRoles(): array
     {
         return ['mahasiswa' => ['mahasiswa'], 'dosen' => ['dosen']];
     }
 
+    /**
+     * Menyediakan seluruh role yang digunakan oleh skenario pengujian.
+     * Konsep Laravel: PHPUnit Data Provider untuk Feature Test.
+     */
     public static function allRoles(): array
     {
         return [...self::borrowerRoles(), 'admin' => ['admin']];

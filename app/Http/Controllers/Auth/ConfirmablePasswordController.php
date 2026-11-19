@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Meminta konfirmasi kata sandi sebelum pengguna meneruskan aksi sensitif.
+ * Konsep Laravel: Password Confirmation, Authentication dan Session.
+ */
 class ConfirmablePasswordController extends Controller
 {
     /**
-     * Show the confirm password view.
+     * Menampilkan formulir konfirmasi kata sandi.
+     * Konsep Laravel: Password Confirmation, Authentication dan Session.
      */
     public function show(): View
     {
@@ -20,7 +25,8 @@ class ConfirmablePasswordController extends Controller
     }
 
     /**
-     * Confirm the user's password.
+     * Memeriksa kata sandi pengguna lalu menyimpan waktu konfirmasi di session.
+     * Konsep Laravel: Password Confirmation, Authentication dan Session.
      */
     public function store(Request $request): RedirectResponse
     {

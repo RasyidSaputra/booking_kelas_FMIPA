@@ -7,10 +7,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Menampilkan pemberitahuan verifikasi atau mengarahkan pengguna yang sudah terverifikasi.
+ * Konsep Laravel: Invokable Controller dan Email Verification.
+ */
 class EmailVerificationPromptController extends Controller
 {
     /**
-     * Display the email verification prompt.
+     * Mengarahkan akun terverifikasi ke dashboard atau menampilkan halaman verifikasi email.
+     * Konsep Laravel: Invokable Controller dan Email Verification.
      */
     public function __invoke(Request $request): RedirectResponse|View
     {

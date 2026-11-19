@@ -8,8 +8,16 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Menyajikan daftar, informasi, dan jadwal pemakaian ruangan.
+ * Konsep Laravel: API Controller, Query Builder, Pagination dan API Resource.
+ */
 class RoomController extends Controller
 {
+    /**
+     * Memvalidasi pencarian dan kapasitas lalu mengembalikan ruangan aktif sebagai koleksi resource terpaginasikan.
+     * Konsep Laravel: API Controller, API Resource dan Query Builder.
+     */
     public function index(Request $request)
     {
         $data = $request->validate([
@@ -25,11 +33,19 @@ class RoomController extends Controller
         return RoomResource::collection($rooms);
     }
 
+    /**
+     * Mengembalikan informasi satu ruangan aktif melalui RoomResource.
+     * Konsep Laravel: API Controller, API Resource dan Query Builder.
+     */
     public function show(int $room): RoomResource
     {
         return new RoomResource($this->findRoom($room));
     }
 
+    /**
+     * Memvalidasi rentang waktu dan menghitung ketersediaan terhadap booking disetujui tanpa membuat pemesanan.
+     * Konsep Laravel: API Controller, Request Validation dan JSON Response.
+     */
     public function availability(Request $request, int $room)
     {
         $record = $this->findRoom($room);
@@ -50,6 +66,10 @@ class RoomController extends Controller
         ]]);
     }
 
+    /**
+     * Mencari ruangan aktif dan menghentikan request dengan HTTP 404 jika tidak ditemukan.
+     * Konsep Laravel: API Controller, API Resource dan Query Builder.
+     */
     private function findRoom(int $id): object
     {
         $room = DB::table('rooms')->where('is_active', true)->find($id);
