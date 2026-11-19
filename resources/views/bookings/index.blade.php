@@ -97,6 +97,13 @@
                             <td>{{ $booking->participant_count }} orang</td>
                             <td><x-booking-status :status="$booking->status" /></td>
                             <td style="text-align: right; white-space: nowrap;">
+
+<a href="{{ route('bookings.show', $booking->id) }}"
+   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-md transition-colors"
+   title="Lihat detail pengajuan">
+    <span>Lihat Detail</span>
+</a>
+
                                 @if($canManage)
                                     <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px;">
                                         {{-- Tombol Revisi Waktu --}}
