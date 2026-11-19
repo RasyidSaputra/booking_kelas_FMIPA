@@ -23,34 +23,34 @@ class BookingController extends Controller
         return view('bookings.index', compact('bookings'));
     }
 
-public function show(Request $request, int $booking): View
-{
-    $bookingData = DB::table('bookings')
-        ->join('rooms', 'rooms.id', '=', 'bookings.room_id')
-        ->leftJoin('users as reviewer', 'reviewer.id', '=', 'bookings.reviewed_by')
-        ->where('bookings.id', $booking)
-        ->select(
-            'bookings.*',
-            'rooms.name as room_name',
-            'rooms.code as room_code',
-            'rooms.capacity as room_capacity',
-            'rooms.location as room_location',
-            'reviewer.name as reviewer_name'
-        )
-        ->first();
+    public function show(Request $request, int $booking): View
+    {
+        $bookingData = DB::table('bookings')
+            ->join('rooms', 'rooms.id', '=', 'bookings.room_id')
+            ->leftJoin('users as reviewer', 'reviewer.id', '=', 'bookings.reviewed_by')
+            ->where('bookings.id', $booking)
+            ->select(
+                'bookings.*',
+                'rooms.name as room_name',
+                'rooms.code as room_code',
+                'rooms.capacity as room_capacity',
+                'rooms.location as room_location',
+                'reviewer.name as reviewer_name'
+            )
+            ->first();
 
-    abort_if($bookingData === null, 404);
+        abort_if($bookingData === null, 404);
 
-    abort_unless(
-        (int) $bookingData->user_id === (int) $request->user()->id
-        || $request->user()->can('view-room-master'),
-        403
-    );
+        abort_unless(
+            (int) $bookingData->user_id === (int) $request->user()->id
+            || $request->user()->can('view-room-master'),
+            403
+        );
 
-    return view('bookings.show', [
-        'booking' => $bookingData,
-    ]);
-}
+        return view('bookings.show', [
+            'booking' => $bookingData,
+        ]);
+    }
 
     public function store(StoreBookingRequest $request, BookingManagement $management): RedirectResponse
     {

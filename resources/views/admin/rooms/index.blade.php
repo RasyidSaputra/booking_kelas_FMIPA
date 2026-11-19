@@ -94,6 +94,7 @@
                                         <td><strong>{{ \Carbon\CarbonImmutable::parse($item->starts_at)->locale('id')->translatedFormat('d M Y, H:i') }}</strong><small>sampai {{ \Carbon\CarbonImmutable::parse($item->ends_at)->locale('id')->translatedFormat('d M Y, H:i') }}</small></td>
                                         <td><x-booking-status :status="$item->status" />@if($item->lecture_schedule_id)<small>Kuliah mingguan{{ $item->is_lecture_exception ? ' · Pengecualian' : '' }}</small>@endif</td>
                                         <td><div class="master-row-actions">
+                                            <a href="{{ route('bookings.show', $item->id) }}">Lihat Detail</a>
                                             @if($tab === 'bookings' && $item->status === 'pending')
                                                 <button type="button" class="is-approve" x-on:click="open('approve', @js($item))">Setujui</button><button type="button" class="is-danger" x-on:click="open('reject', @js($item))">Tolak</button>
                                             @elseif($tab === 'schedules')

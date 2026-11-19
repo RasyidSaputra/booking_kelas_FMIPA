@@ -1,9 +1,14 @@
-
 <x-dashboard-layout :title="'Detail Pengajuan #' . $booking->id">
 
     @php
         $startsAt = \Carbon\CarbonImmutable::parse($booking->starts_at);
         $endsAt = \Carbon\CarbonImmutable::parse($booking->ends_at);
+        $isAdminReview = auth()->user()->can('view-room-master')
+            && (int) $booking->user_id !== (int) auth()->id();
+        $backUrl = $isAdminReview
+            ? route('admin.rooms.index', ['tab' => 'bookings'])
+            : route('bookings.index');
+        $backLabel = $isAdminReview ? 'Pengajuan peminjaman' : 'Bookingan Saya';
     @endphp
 
     <div class="space-y-6">
@@ -12,9 +17,9 @@
         <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-200">
             <div>
                 <nav class="text-sm text-gray-500 mb-2">
-                    <a href="{{ route('bookings.index') }}"
+                    <a href="{{ $backUrl }}"
                        class="hover:text-emerald-700">
-                        Bookingan Saya
+                        {{ $backLabel }}
                     </a>
                     <span class="mx-2">/</span>
                     <span class="font-semibold text-gray-900">
@@ -32,7 +37,7 @@
                 </p>
             </div>
 
-            <a href="{{ route('bookings.index') }}"
+            <a href="{{ $backUrl }}"
                class="inline-flex items-center px-4 py-2 text-sm font-semibold
                       text-gray-700 bg-white border border-gray-300
                       rounded-lg hover:bg-gray-50">
@@ -121,6 +126,9 @@
                     </p>
                     <p class="text-sm font-semibold text-gray-900">
                         {{ $startsAt->locale('id')->translatedFormat('l, d F Y') }}
+                        @unless($startsAt->isSameDay($endsAt))
+                            sampai {{ $endsAt->locale('id')->translatedFormat('l, d F Y') }}
+                        @endunless
                     </p>
                 </div>
 
@@ -163,7 +171,11 @@
                 Informasi Persetujuan Admin
             </h2>
 
-            @if($booking->reviewed_by)
+            @if($booking->status === 'cancelled')
+                <p class="text-sm text-gray-700 mb-4">Pengajuan telah dibatalkan.</p>
+            @endif
+
+            @if($booking->reviewed_by || $booking->reviewed_at)
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                     <div>
@@ -187,11 +199,13 @@
                     </div>
 
                 </div>
-            @else
+            @elseif($booking->status === 'pending')
                 <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-4">
                     Pengajuan belum diperiksa oleh Admin.
                     Silakan menunggu proses persetujuan.
                 </p>
+            @elseif($booking->status !== 'cancelled')
+                <p class="text-sm text-gray-500">Informasi pemeriksaan admin belum tersedia.</p>
             @endif
 
             @if($booking->status === 'rejected' && $booking->rejection_reason)
