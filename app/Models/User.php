@@ -22,7 +22,7 @@ class User extends Authenticatable
     /** URL foto profil, atau null jika belum diunggah. */
     public function avatarUrl(): ?string
     {
-        return $this->avatar_path ? '/storage/' . $this->avatar_path : null;
+        return $this->avatar_path ? Storage::disk('public')->url($this->avatar_path) : null;
     }
 
     public function initial(): string

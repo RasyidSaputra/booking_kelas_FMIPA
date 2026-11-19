@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class UserManagementController extends Controller
@@ -57,7 +58,7 @@ class UserManagementController extends Controller
 
     public function destroy(Request $request, int $user)
     {
-        DB::transaction(function () use ($request, $user): void {
+        $avatar = DB::transaction(function () use ($request, $user): ?string {
             $admins = DB::table('users')->where('role', 'admin')->orderBy('id')->lockForUpdate()->get();
             $record = User::where('id', $user)->lockForUpdate()->firstOrFail();
             if ($record->id === $request->user()->id) {
@@ -69,8 +70,15 @@ class UserManagementController extends Controller
             if (DB::table('bookings')->where('user_id', $user)->orWhere('reviewed_by', $user)->exists()) {
                 throw ValidationException::withMessages(['user_id' => 'Pengguna memiliki riwayat peminjaman atau pemeriksaan dan tidak dapat dihapus.']);
             }
+            $avatar = $record->avatar_path;
             $record->delete();
+
+            return $avatar;
         }, 3);
+
+        if ($avatar) {
+            DB::afterCommit(fn () => Storage::disk('public')->delete($avatar));
+        }
 
         return $this->saved($request, 'Pengguna berhasil dihapus.', 'users');
     }

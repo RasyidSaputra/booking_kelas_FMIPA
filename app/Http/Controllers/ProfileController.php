@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,14 +30,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $user = $request->user();
-        $user->fill($request->safe()->only(['name', 'identity_number', 'email']));
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $oldAvatar = null;
+        $newAvatar = null;
 
         if ($request->hasFile('avatar')) {
             $newAvatar = $request->file('avatar')->store('avatars', 'public');
@@ -44,26 +38,39 @@ class ProfileController extends Controller
             if (! $newAvatar) {
                 throw ValidationException::withMessages(['avatar' => 'Foto profil belum dapat disimpan. Coba kembali.']);
             }
-
-            $oldAvatar = $user->avatar_path;
-            $user->avatar_path = $newAvatar;
-        } elseif ($request->boolean('remove_avatar')) {
-            $oldAvatar = $user->avatar_path;
-            $user->avatar_path = null;
         }
 
         try {
-            $user->save();
+            $oldAvatar = DB::transaction(function () use ($request, $newAvatar): ?string {
+                // Baca ulang setelah lock agar request bersamaan memakai avatar terbaru.
+                $user = User::whereKey($request->user()->getAuthIdentifier())->lockForUpdate()->firstOrFail();
+                $user->fill($request->safe()->only(['name', 'identity_number', 'email']));
+                if ($user->isDirty('email')) {
+                    $user->email_verified_at = null;
+                }
+
+                $oldAvatar = null;
+                if ($newAvatar !== null || $request->boolean('remove_avatar')) {
+                    $oldAvatar = $user->avatar_path;
+                    $user->avatar_path = $newAvatar;
+                }
+                $user->save();
+
+                return $oldAvatar;
+            }, 3);
         } catch (\Throwable $e) {
-            if (isset($newAvatar) && $newAvatar) {
+            if ($newAvatar !== null) {
                 Storage::disk('public')->delete($newAvatar);
             }
 
             throw $e;
         }
 
+        // Sinkronkan akun yang sudah di-cache oleh guard dengan hasil penyimpanan.
+        $request->user()->refresh();
+
         if ($oldAvatar) {
-            Storage::disk('public')->delete($oldAvatar);
+            DB::afterCommit(fn () => Storage::disk('public')->delete($oldAvatar));
         }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
@@ -82,21 +89,23 @@ class ProfileController extends Controller
             'password.current_password' => 'Kata sandi saat ini tidak sesuai.',
         ]);
 
-        $user = $request->user();
+        $avatar = DB::transaction(function () use ($request): ?string {
+            $user = User::whereKey($request->user()->getAuthIdentifier())->lockForUpdate()->firstOrFail();
+            if (DB::table('bookings')->where('user_id', $user->id)->orWhere('reviewed_by', $user->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'password' => 'Akun memiliki riwayat peminjaman atau pemeriksaan dan tidak dapat dihapus.',
+                ])->errorBag('userDeletion');
+            }
+            $avatar = $user->avatar_path;
+            $user->delete();
 
-        if (DB::table('bookings')->where('user_id', $user->id)->orWhere('reviewed_by', $user->id)->exists()) {
-            throw ValidationException::withMessages([
-                'password' => 'Akun memiliki riwayat peminjaman atau pemeriksaan dan tidak dapat dihapus.',
-            ])->errorBag('userDeletion');
-        }
+            return $avatar;
+        }, 3);
 
         Auth::logout();
 
-        $avatar = $user->avatar_path;
-        $user->delete();
-
         if ($avatar) {
-            Storage::disk('public')->delete($avatar);
+            DB::afterCommit(fn () => Storage::disk('public')->delete($avatar));
         }
 
         $request->session()->invalidate();
